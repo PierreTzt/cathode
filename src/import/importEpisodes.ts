@@ -11,7 +11,7 @@ export function importEpisodes(db: DB, gdprDir: string): number {
      VALUES (@serie_id, @saison, @episode, @episode_source_id, @vu_le, @duree_min, @rewatch_count)
      ON CONFLICT (serie_id, saison, episode, episode_source_id) DO UPDATE SET
        rewatch_count = MAX(rewatch_count, excluded.rewatch_count),
-       vu_le = MIN(vu_le, excluded.vu_le)`
+       vu_le = MIN(COALESCE(vu_le, excluded.vu_le), COALESCE(excluded.vu_le, vu_le))`
   );
   transaction(db, () => {
     for (const r of rows) {
