@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { getDb } from "../src/lib/db";
-import { listeSeries, detailSerie, episodesDeSerie } from "../src/lib/queries";
+import { listeSeries, detailSerie, episodesDeSerie, stats } from "../src/lib/queries";
 
 function seed() {
   const db = getDb(":memory:");
@@ -33,5 +33,26 @@ describe("détail série", () => {
     const eps = episodesDeSerie(db, 1);
     expect(eps[0].saison).toBe(1);
     expect(eps[1].saison).toBe(2);
+  });
+});
+
+describe("stats", () => {
+  it("calcule les totaux et la répartition par année", () => {
+    const db = getDb(":memory:");
+    db.exec(
+      "INSERT INTO series (id,source_id,nom) VALUES (1,'a','NCIS');" +
+        "INSERT INTO episodes_vus (serie_id,saison,episode,episode_source_id,vu_le,duree_min) VALUES " +
+        "(1,1,1,'e1','2020-01-01',45),(1,1,2,'e2','2021-01-01',45);" +
+        "INSERT INTO films_vus (nom,vu_le,duree_min) VALUES ('Barbie','2023-01-01',114);"
+    );
+    const s = stats(db);
+    expect(s.totalMinutes).toBe(204);
+    expect(s.nbEpisodes).toBe(2);
+    expect(s.nbFilms).toBe(1);
+    expect(s.parAnnee).toEqual([
+      { annee: "2020", nb: 1 },
+      { annee: "2021", nb: 1 },
+    ]);
+    expect(s.topSeries[0]).toEqual({ nom: "NCIS", nb: 2 });
   });
 });

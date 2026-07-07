@@ -43,3 +43,40 @@ export function episodesDeSerie(db: DB, id: number): EpisodeVu[] {
     )
     .all(id) as unknown as EpisodeVu[];
 }
+
+export interface Stats {
+  totalMinutes: number;
+  nbEpisodes: number;
+  nbSeries: number;
+  nbFilms: number;
+  parAnnee: { annee: string; nb: number }[];
+  topSeries: { nom: string; nb: number }[];
+}
+
+export function stats(db: DB): Stats {
+  const one = (sql: string): number =>
+    (db.prepare(sql).get() as unknown as { n: number }).n ?? 0;
+  const totalMinutes =
+    one("SELECT COALESCE(SUM(duree_min),0) AS n FROM episodes_vus") +
+    one("SELECT COALESCE(SUM(duree_min),0) AS n FROM films_vus");
+  return {
+    totalMinutes,
+    nbEpisodes: one("SELECT COUNT(*) AS n FROM episodes_vus"),
+    nbSeries: one("SELECT COUNT(*) AS n FROM series"),
+    nbFilms: one("SELECT COUNT(*) AS n FROM films_vus"),
+    parAnnee: db
+      .prepare(
+        `SELECT substr(vu_le,1,4) AS annee, COUNT(*) AS nb
+           FROM episodes_vus WHERE vu_le IS NOT NULL AND vu_le <> ''
+          GROUP BY annee ORDER BY annee ASC`
+      )
+      .all() as unknown as { annee: string; nb: number }[],
+    topSeries: db
+      .prepare(
+        `SELECT s.nom AS nom, COUNT(ev.id) AS nb
+           FROM series s JOIN episodes_vus ev ON ev.serie_id = s.id
+          GROUP BY s.id ORDER BY nb DESC LIMIT 10`
+      )
+      .all() as unknown as { nom: string; nb: number }[],
+  };
+}
