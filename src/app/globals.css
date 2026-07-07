@@ -1,0 +1,10 @@
+* { box-sizing: border-box; }
+body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: #0f1116; color: #e8eaed; }
+a { color: #6ea8fe; text-decoration: none; }
+a:hover { text-decoration: underline; }
+main { max-width: 960px; margin: 0 auto; padding: 24px; }
+h1 { font-size: 1.6rem; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #2a2f3a; }
+th { color: #9aa4b2; font-weight: 600; }
+nav { display: flex; gap: 16px; padding: 16px 24px; border-bottom: 1px solid #2a2f3a; }
