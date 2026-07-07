@@ -8,3 +8,4 @@ gdpr-data/
 .superpowers/
 data/
 next-env.d.ts
+tsconfig.tsbuildinfo
