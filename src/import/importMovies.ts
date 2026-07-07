@@ -10,6 +10,7 @@ export function importMovies(db: DB, gdprDir: string): number {
   transaction(db, () => {
     for (const r of rows) {
       if (r.entity_type !== "movie") continue;
+      if (r.type !== "watch") continue; // exclut follow / towatch (non vus)
       if (!(r.movie_name ?? "").trim()) continue;
       insert.run(
         r.movie_name,
