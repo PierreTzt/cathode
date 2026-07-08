@@ -9,6 +9,10 @@ Au tout premier lancement, l'appli s'installe et importe automatiquement
 votre historique TV Time (cela peut prendre une minute). Les fois suivantes,
 le démarrage est immédiat.
 
+Les affiches de vos séries sont récupérées automatiquement depuis TMDB au
+démarrage (une connexion Internet est nécessaire pour les afficher). Votre
+historique, lui, reste stocké localement sur votre PC.
+
 ## Prérequis (une seule fois)
 Node.js doit être installé : https://nodejs.org (choisir la version proposée,
 puis « suivant » jusqu'au bout).
