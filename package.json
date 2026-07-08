@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "import": "node --import tsx src/import/run.ts",
-    "enrich": "node --env-file=.env.local --import tsx src/import/enrichRun.ts",
+    "enrich": "node --env-file-if-exists=.env.local --import tsx src/import/enrichRun.ts",
     "test": "vitest run"
   },
   "dependencies": {
