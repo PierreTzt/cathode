@@ -44,6 +44,14 @@ describe("détail série", () => {
     expect(eps[0].saison).toBe(1);
     expect(eps[1].saison).toBe(2);
   });
+
+  it("detailSerie renvoie les chemins d'images", () => {
+    const db = getDb(":memory:");
+    db.exec(
+      "INSERT INTO series (id,source_id,nom,poster_path,backdrop_path) VALUES (1,'a','NCIS','/p.jpg','/b.jpg')"
+    );
+    expect(detailSerie(db, 1)).toEqual({ nom: "NCIS", poster_path: "/p.jpg", backdrop_path: "/b.jpg" });
+  });
 });
 
 describe("stats", () => {

@@ -26,9 +26,14 @@ export function listeSeries(db: DB): SerieListe[] {
   return rows.map((r) => ({ ...r }));
 }
 
-export function detailSerie(db: DB, id: number): { nom: string } | undefined {
-  return db.prepare("SELECT nom FROM series WHERE id = ?").get(id) as unknown as
-    | { nom: string }
+export function detailSerie(
+  db: DB,
+  id: number
+): { nom: string; poster_path: string | null; backdrop_path: string | null } | undefined {
+  return db
+    .prepare("SELECT nom, poster_path, backdrop_path FROM series WHERE id = ?")
+    .get(id) as unknown as
+    | { nom: string; poster_path: string | null; backdrop_path: string | null }
     | undefined;
 }
 
