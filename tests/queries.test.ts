@@ -19,6 +19,16 @@ describe("listeSeries", () => {
     expect(rows[0].nb_episodes).toBe(2);
     expect(rows[1].nom).toBe("Lost");
   });
+
+  it("inclut poster_path", () => {
+    const db = getDb(":memory:");
+    db.exec(
+      "INSERT INTO series (id, source_id, nom, actif, archive, poster_path) VALUES (1,'a','NCIS',1,0,'/p.jpg');" +
+        "INSERT INTO episodes_vus (serie_id,saison,episode,episode_source_id,duree_min) VALUES (1,1,1,'x1',45);"
+    );
+    const rows = listeSeries(db);
+    expect(rows[0].poster_path).toBe("/p.jpg");
+  });
 });
 
 describe("détail série", () => {
@@ -33,6 +43,14 @@ describe("détail série", () => {
     const eps = episodesDeSerie(db, 1);
     expect(eps[0].saison).toBe(1);
     expect(eps[1].saison).toBe(2);
+  });
+
+  it("detailSerie renvoie les chemins d'images", () => {
+    const db = getDb(":memory:");
+    db.exec(
+      "INSERT INTO series (id,source_id,nom,poster_path,backdrop_path) VALUES (1,'a','NCIS','/p.jpg','/b.jpg')"
+    );
+    expect(detailSerie(db, 1)).toEqual({ nom: "NCIS", poster_path: "/p.jpg", backdrop_path: "/b.jpg" });
   });
 });
 
