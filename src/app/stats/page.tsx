@@ -10,12 +10,19 @@ export default function StatsPage() {
   return (
     <div>
       <h1>Statistiques</h1>
-      <p><strong>Temps total :</strong> {jours} j {heures} h ({s.totalMinutes.toLocaleString("fr-FR")} min)</p>
-      <p style={{ color: "#9aa4b2", fontSize: "0.9rem", marginTop: "-4px" }}>
+      <div className="stat-cards">
+        <div className="stat-card">
+          <div className="n">{jours} j {heures} h</div>
+          <div className="l">Temps total ({s.totalMinutes.toLocaleString("fr-FR")} min)</div>
+        </div>
+        <div className="stat-card"><div className="n">{s.nbEpisodes.toLocaleString("fr-FR")}</div><div className="l">Épisodes vus</div></div>
+        <div className="stat-card"><div className="n">{s.nbSeries}</div><div className="l">Séries</div></div>
+        <div className="stat-card"><div className="n">{s.nbFilms}</div><div className="l">Films</div></div>
+      </div>
+      <p className="muted" style={{ fontSize: "0.9rem" }}>
         Estimation basse : l&apos;export TV Time ne fournit la durée que pour une partie des épisodes,
         et un épisode revu n&apos;est compté qu&apos;une fois. Ton temps réel est plus élevé.
       </p>
-      <p><strong>{s.nbEpisodes}</strong> épisodes · <strong>{s.nbSeries}</strong> séries · <strong>{s.nbFilms}</strong> films</p>
 
       <h2>Top séries</h2>
       <table>
