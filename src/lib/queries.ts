@@ -6,12 +6,13 @@ export interface SerieListe {
   nb_episodes: number;
   actif: number;
   archive: number;
+  poster_path: string | null;
 }
 
 export function listeSeries(db: DB): SerieListe[] {
-  return db
+  const rows = db
     .prepare(
-      `SELECT s.id, s.nom, s.actif, s.archive,
+      `SELECT s.id, s.nom, s.actif, s.archive, s.poster_path,
               COUNT(ev.id) AS nb_episodes
          FROM series s
          LEFT JOIN episodes_vus ev ON ev.serie_id = s.id
@@ -19,6 +20,10 @@ export function listeSeries(db: DB): SerieListe[] {
         ORDER BY nb_episodes DESC, s.nom ASC`
     )
     .all() as unknown as SerieListe[];
+  // node:sqlite rows have a null prototype; spread into plain objects so
+  // React Server Components can serialize them across to Client Components
+  // (SeriesGrid).
+  return rows.map((r) => ({ ...r }));
 }
 
 export function detailSerie(db: DB, id: number): { nom: string } | undefined {
