@@ -1,6 +1,12 @@
 "use server";
 import { getDb } from "@/lib/db";
-import { marquerEpisodeVu, marquerJusquA, demarquerEpisode } from "@/lib/queries";
+import {
+  marquerEpisodeVu,
+  marquerJusquA,
+  demarquerEpisode,
+  ajouterAVoir,
+  retirerAVoir,
+} from "@/lib/queries";
 import { revalidatePath } from "next/cache";
 
 function revalider(serieId: number) {
@@ -29,4 +35,14 @@ export async function actionDemarquer(
 ): Promise<void> {
   demarquerEpisode(getDb(), serieId, saison, episode);
   revalider(serieId);
+}
+
+export async function actionAjouterAVoir(titre: string): Promise<void> {
+  ajouterAVoir(getDb(), titre);
+  revalidatePath("/films");
+}
+
+export async function actionRetirerAVoir(id: number): Promise<void> {
+  retirerAVoir(getDb(), id);
+  revalidatePath("/films");
 }

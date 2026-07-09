@@ -10,6 +10,7 @@
     "enrich": "node --env-file-if-exists=.env.local --import tsx src/import/enrichRun.ts",
     "catalogue": "node --env-file-if-exists=.env.local --import tsx src/import/catalogueRun.ts",
     "backup": "node --import tsx src/import/backupRun.ts",
+    "import-avoir": "node --import tsx src/import/importAVoirRun.ts",
     "test": "vitest run"
   },
   "dependencies": {

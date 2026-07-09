@@ -217,6 +217,71 @@ export function episodesCompletsDeSerie(db: DB, serieId: number): EpisodeComplet
   return rows.map((r) => ({ ...r }));
 }
 
+export interface EpisodeAVenir {
+  serie_id: number;
+  nom: string;
+  poster_path: string | null;
+  saison: number;
+  episode: number;
+  titre: string | null;
+  date_diffusion: string;
+}
+
+// Prochains épisodes à sortir (fenêtre de joursMax jours) pour les séries suivies (≥1 vu).
+export function aVenir(db: DB, joursMax = 90): EpisodeAVenir[] {
+  const rows = db
+    .prepare(
+      `SELECT s.id AS serie_id, s.nom, s.poster_path,
+              c.saison, c.episode, c.titre, c.date_diffusion
+         FROM episodes_catalogue c
+         JOIN series s ON s.id = c.serie_id
+        WHERE c.saison >= 1
+          AND c.date_diffusion IS NOT NULL
+          AND c.date_diffusion > date('now')
+          AND c.date_diffusion <= date('now', '+' || ? || ' days')
+          AND EXISTS (SELECT 1 FROM episodes_vus v WHERE v.serie_id = s.id)
+        ORDER BY c.date_diffusion ASC, s.nom ASC`
+    )
+    .all(joursMax) as unknown as EpisodeAVenir[];
+  return rows.map((r) => ({ ...r }));
+}
+
+export interface FilmVu {
+  nom: string;
+  vu_le: string | null;
+  duree_min: number;
+}
+
+export function filmsVus(db: DB): FilmVu[] {
+  const rows = db
+    .prepare("SELECT nom, vu_le, duree_min FROM films_vus ORDER BY vu_le DESC, nom ASC")
+    .all() as unknown as FilmVu[];
+  return rows.map((r) => ({ ...r }));
+}
+
+export interface AVoir {
+  id: number;
+  titre: string;
+  ajoute_le: string | null;
+}
+
+export function listeAVoir(db: DB): AVoir[] {
+  const rows = db
+    .prepare("SELECT id, titre, ajoute_le FROM a_voir ORDER BY ajoute_le DESC, titre ASC")
+    .all() as unknown as AVoir[];
+  return rows.map((r) => ({ ...r }));
+}
+
+export function ajouterAVoir(db: DB, titre: string): void {
+  const t = titre.trim();
+  if (!t) return;
+  db.prepare("INSERT OR IGNORE INTO a_voir (titre, ajoute_le) VALUES (?, date('now'))").run(t);
+}
+
+export function retirerAVoir(db: DB, id: number): void {
+  db.prepare("DELETE FROM a_voir WHERE id = ?").run(id);
+}
+
 export interface Progression {
   vus: number;
   diffuses: number;

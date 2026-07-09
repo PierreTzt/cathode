@@ -9,7 +9,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <nav>
           <a href="/">À suivre</a>
+          <a href="/a-venir">À venir</a>
           <a href="/mes-series">Mes séries</a>
+          <a href="/films">Films</a>
           <a href="/stats">Statistiques</a>
         </nav>
         <main>{children}</main>

@@ -41,3 +41,9 @@ CREATE TABLE IF NOT EXISTS episodes_catalogue (
 );
 
 CREATE INDEX IF NOT EXISTS idx_cat_serie ON episodes_catalogue (serie_id);
+
+CREATE TABLE IF NOT EXISTS a_voir (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  titre TEXT NOT NULL UNIQUE,
+  ajoute_le TEXT
+);
