@@ -82,6 +82,34 @@ table { border-collapse: collapse; width: 100%; }
 th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
 th { color: var(--muted); font-weight: 600; }
 
+/* Tableau de bord « À suivre » */
+.suivi-liste { display: flex; flex-direction: column; gap: 12px; }
+.suivi-card {
+  display: flex; align-items: center; gap: 14px; padding: 10px 12px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+}
+.suivi-poster { width: 46px; height: 69px; object-fit: cover; border-radius: 6px; flex: none; box-shadow: 0 3px 12px rgba(0,0,0,.5); }
+.suivi-info { flex: 1; min-width: 0; }
+.suivi-nom { font-weight: 700; }
+.suivi-nom:hover { color: var(--gold); }
+.suivi-ep { margin-top: 2px; font-size: .95rem; }
+.suivi-meta { font-size: .82rem; margin-top: 2px; }
+.suivi-actions { display: flex; gap: 8px; flex: none; }
+.suivi-actions button {
+  background: var(--gold); color: var(--gold-ink); border: none; border-radius: 8px;
+  padding: 8px 12px; font-weight: 700; font-size: .9rem; cursor: pointer;
+  transition: opacity .12s ease;
+}
+.suivi-actions button.secondaire { background: transparent; color: var(--gold); border: 1px solid var(--gold); }
+.suivi-actions button:hover:not(:disabled) { opacity: .85; }
+.suivi-actions button:disabled { opacity: .5; cursor: default; }
+
+@media (max-width: 560px) {
+  .suivi-card { flex-wrap: wrap; }
+  .suivi-actions { width: 100%; }
+  .suivi-actions button { flex: 1; }
+}
+
 /* En-tête détail série */
 .serie-hero { position: relative; border-radius: 16px; overflow: hidden; margin-bottom: 24px; border: 1px solid var(--border); }
 .serie-hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; filter: brightness(.35); }
