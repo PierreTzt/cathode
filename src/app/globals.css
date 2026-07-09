@@ -83,6 +83,13 @@ th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--bor
 th { color: var(--muted); font-weight: 600; }
 
 /* Tableau de bord « À suivre » */
+.tri-selecteur { display: flex; align-items: center; gap: 8px; margin: 4px 0 18px; font-size: .9rem; }
+.tri-selecteur a {
+  color: var(--muted); font-weight: 600; padding: 5px 12px; border-radius: 20px;
+  border: 1px solid var(--border);
+}
+.tri-selecteur a:hover { color: var(--text); }
+.tri-selecteur a.actif { color: var(--gold-ink); background: var(--gold); border-color: var(--gold); }
 .suivi-liste { display: flex; flex-direction: column; gap: 12px; }
 .suivi-card {
   display: flex; align-items: center; gap: 14px; padding: 10px 12px;

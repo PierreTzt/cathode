@@ -100,7 +100,10 @@ export interface LigneASuivre {
   titre: string | null;
   date_diffusion: string | null;
   nb_en_retard: number;
+  dernier_vu: string | null;
 }
+
+export type TriASuivre = "prochain" | "dernier_vu";
 
 // Sélection commune : épisodes diffusés (date passée), hors spéciaux, non vus.
 const RETARD_WHERE = `
@@ -112,7 +115,10 @@ const RETARD_WHERE = `
      WHERE v.serie_id = c.serie_id AND v.saison = c.saison AND v.episode = c.episode
   )`;
 
-export function tableauASuivre(db: DB): LigneASuivre[] {
+export function tableauASuivre(db: DB, tri: TriASuivre = "prochain"): LigneASuivre[] {
+  // `tri` est un enum contrôlé (jamais du texte utilisateur) → interpolation sûre.
+  const ordre =
+    tri === "dernier_vu" ? "dernier_vu DESC, s.nom ASC" : "r.date_diffusion DESC, s.nom ASC";
   const rows = db
     .prepare(
       `WITH retard AS (
@@ -123,10 +129,11 @@ export function tableauASuivre(db: DB): LigneASuivre[] {
           WHERE ${RETARD_WHERE}
        )
        SELECT r.serie_id, s.nom, s.poster_path,
-              r.saison, r.episode, r.titre, r.date_diffusion, r.nb_en_retard
+              r.saison, r.episode, r.titre, r.date_diffusion, r.nb_en_retard,
+              (SELECT MAX(v.vu_le) FROM episodes_vus v WHERE v.serie_id = r.serie_id) AS dernier_vu
          FROM retard r JOIN series s ON s.id = r.serie_id
         WHERE r.rn = 1
-        ORDER BY r.date_diffusion DESC, s.nom ASC`
+        ORDER BY ${ordre}`
     )
     .all() as unknown as LigneASuivre[];
   // node:sqlite : aplatir pour la sérialisation RSC → composant client.

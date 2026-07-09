@@ -1,11 +1,17 @@
 import { getDb } from "@/lib/db";
-import { tableauASuivre } from "@/lib/queries";
+import { tableauASuivre, type TriASuivre } from "@/lib/queries";
 import { ProchainEpisode } from "@/app/components/ProchainEpisode";
 
 export const dynamic = "force-dynamic";
 
-export default function ASuivre() {
-  const lignes = tableauASuivre(getDb());
+export default async function ASuivre({
+  searchParams,
+}: {
+  searchParams: Promise<{ tri?: string }>;
+}) {
+  const { tri } = await searchParams;
+  const mode: TriASuivre = tri === "dernier_vu" ? "dernier_vu" : "prochain";
+  const lignes = tableauASuivre(getDb(), mode);
   if (lignes.length === 0) {
     return (
       <div>
@@ -28,6 +34,15 @@ export default function ASuivre() {
           · {lignes.length}
         </span>
       </h1>
+      <div className="tri-selecteur">
+        <span className="muted">Trier par :</span>
+        <a className={mode === "prochain" ? "actif" : ""} href="/?tri=prochain">
+          Prochain épisode
+        </a>
+        <a className={mode === "dernier_vu" ? "actif" : ""} href="/?tri=dernier_vu">
+          Dernier vu
+        </a>
+      </div>
       <div className="suivi-liste">
         {lignes.map((l) => (
           <ProchainEpisode key={l.serie_id} ligne={l} />

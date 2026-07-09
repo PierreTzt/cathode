@@ -110,6 +110,28 @@ describe("tableauASuivre", () => {
   });
 });
 
+describe("tableauASuivre — tri", () => {
+  it("bascule entre tri par prochain épisode et par dernier vu", () => {
+    const db = getDb(":memory:");
+    db.exec(
+      "INSERT INTO series (id,nom) VALUES (1,'A'),(2,'B');" +
+        "INSERT INTO episodes_catalogue (serie_id,saison,episode,titre,date_diffusion,duree_min) VALUES " +
+        // A : E1 vu (2001), E2 en retard ; B : E1 vu (2020), E2 en retard
+        "(1,1,1,'a1','2001-01-01',40),(1,1,2,'a2','2001-01-08',40)," +
+        "(2,1,1,'b1','2020-01-01',40),(2,1,2,'b2','2020-01-08',40);" +
+        // A vu le 2026-06-01 (plus récent) ; B vu le 2026-05-01
+        "INSERT INTO episodes_vus (serie_id,saison,episode,episode_source_id,vu_le,duree_min) VALUES " +
+        "(1,1,1,'x','2026-06-01',40),(2,1,1,'y','2026-05-01',40);"
+    );
+    // prochain épisode : B (2020-01-08) plus récent que A (2001-01-08) → B en tête
+    expect(tableauASuivre(db, "prochain").map((r) => r.nom)).toEqual(["B", "A"]);
+    // dernier vu : A (2026-06-01) plus récent que B (2026-05-01) → A en tête
+    expect(tableauASuivre(db, "dernier_vu").map((r) => r.nom)).toEqual(["A", "B"]);
+    // défaut = prochain
+    expect(tableauASuivre(db).map((r) => r.nom)).toEqual(["B", "A"]);
+  });
+});
+
 describe("marquerEpisodeVu", () => {
   it("insère l'épisode avec durée du catalogue et disparaît du tableau", () => {
     const db = seedCatalogue();
