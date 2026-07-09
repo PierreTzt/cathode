@@ -16,6 +16,8 @@ export function migrate(db: DB): void {
   add("tmdb_id", "INTEGER");
   add("poster_path", "TEXT");
   add("backdrop_path", "TEXT");
+  add("catalogue_maj_le", "TEXT");
+  add("statut_tmdb", "TEXT");
 }
 
 export function getDb(path: string = DEFAULT_PATH): DB {
