@@ -8,6 +8,9 @@ import {
   tableauASuivre,
   marquerEpisodeVu,
   marquerJusquA,
+  episodesCompletsDeSerie,
+  progressionSerie,
+  demarquerEpisode,
 } from "../src/lib/queries";
 
 function seed() {
@@ -167,5 +170,54 @@ describe("marquerJusquA", () => {
       .prepare("SELECT COUNT(*) AS n FROM episodes_vus WHERE serie_id=1 AND saison=1 AND episode=3")
       .get() as any;
     expect(futur.n).toBe(0);
+  });
+});
+
+describe("episodesCompletsDeSerie", () => {
+  it("liste tous les épisodes (spéciaux inclus) avec drapeaux vu/diffuse", () => {
+    const eps = episodesCompletsDeSerie(seedCatalogue(), 1);
+    // NCIS : S0E1 (spécial), S1E1 vu, S1E2 diffusé non vu, S1E3 futur
+    expect(eps.map((e) => `${e.saison}x${e.episode}`)).toEqual(["0x1", "1x1", "1x2", "1x3"]);
+    const s1e1 = eps.find((e) => e.saison === 1 && e.episode === 1)!;
+    expect(s1e1.vu).toBe(1);
+    expect(s1e1.diffuse).toBe(1);
+    const s1e2 = eps.find((e) => e.saison === 1 && e.episode === 2)!;
+    expect(s1e2.vu).toBe(0);
+    expect(s1e2.diffuse).toBe(1);
+    const s1e3 = eps.find((e) => e.saison === 1 && e.episode === 3)!;
+    expect(s1e3.diffuse).toBe(0); // futur
+  });
+});
+
+describe("progressionSerie", () => {
+  it("compte vus/diffusés/total et le temps de rattrapage", () => {
+    const p = progressionSerie(seedCatalogue(), 1);
+    // saison>=1 : total 3 (E1,E2,E3) ; diffusés 2 (E1,E2) ; vus 1 (E1)
+    expect(p).toMatchObject({ vus: 1, diffuses: 2, total: 3 });
+    // minutes restantes = durée du seul diffusé non vu (E2 = 45)
+    expect(p.minutesRestantes).toBe(45);
+  });
+});
+
+describe("demarquerEpisode", () => {
+  it("supprime le marquage : l'épisode redevient non vu", () => {
+    const db = seedCatalogue();
+    marquerEpisodeVu(db, 1, 1, 2);
+    expect(episodesCompletsDeSerie(db, 1).find((e) => e.episode === 2)!.vu).toBe(1);
+    demarquerEpisode(db, 1, 1, 2);
+    expect(episodesCompletsDeSerie(db, 1).find((e) => e.episode === 2)!.vu).toBe(0);
+    const n = db
+      .prepare("SELECT COUNT(*) AS n FROM episodes_vus WHERE serie_id=1 AND saison=1 AND episode=2")
+      .get() as any;
+    expect(n.n).toBe(0);
+  });
+});
+
+describe("listeSeries — progression", () => {
+  it("renseigne le nombre d'épisodes diffusés du catalogue", () => {
+    const db = seedCatalogue();
+    const ncis = listeSeries(db).find((s) => s.nom === "NCIS")!;
+    // catalogue NCIS saison>=1 diffusés = E1, E2 (E3 futur exclu)
+    expect(ncis.diffuses).toBe(2);
   });
 });

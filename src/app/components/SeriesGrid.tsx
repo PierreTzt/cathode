@@ -26,6 +26,7 @@ export function SeriesGrid({ series }: { series: SerieListe[] }) {
             nom={s.nom}
             poster_path={s.poster_path}
             nb_episodes={s.nb_episodes}
+            diffuses={s.diffuses}
           />
         ))}
       </div>

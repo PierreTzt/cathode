@@ -117,6 +117,33 @@ th { color: var(--muted); font-weight: 600; }
   .suivi-actions button { flex: 1; }
 }
 
+/* Barre de progression sur les affiches */
+.poster-prog { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(0,0,0,.55); }
+.poster-prog-fill { height: 100%; background: var(--gold); }
+
+/* Bandeau de progression (détail série) */
+.prog-bandeau { margin: 0 0 20px; }
+.prog-barre { height: 8px; border-radius: 6px; background: var(--panel-2); overflow: hidden; border: 1px solid var(--border); }
+.prog-remplissage { height: 100%; background: var(--gold); }
+.prog-legende { display: flex; gap: 14px; align-items: baseline; margin-top: 6px; font-size: .9rem; }
+.prog-legende strong { color: var(--gold); }
+
+/* Tracker d'épisodes (détail série) */
+.tracker-saison { margin-top: 22px; }
+.tracker-titre { font-size: 1.05rem; margin: 0 0 8px; }
+.tracker-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.tracker-ep {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 7px 10px; border-bottom: 1px solid var(--border);
+}
+.tracker-ep label { display: flex; align-items: center; gap: 10px; cursor: pointer; min-width: 0; }
+.tracker-ep input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--gold); cursor: pointer; flex: none; }
+.tracker-code { color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 600; flex: none; }
+.tracker-nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tracker-meta { font-size: .82rem; flex: none; }
+.tracker-ep.a-venir { opacity: .5; }
+.tracker-ep.a-venir label { cursor: default; }
+
 /* En-tête détail série */
 .serie-hero { position: relative; border-radius: 16px; overflow: hidden; margin-bottom: 24px; border: 1px solid var(--border); }
 .serie-hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; filter: brightness(.35); }

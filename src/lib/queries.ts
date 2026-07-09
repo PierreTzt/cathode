@@ -7,13 +7,17 @@ export interface SerieListe {
   actif: number;
   archive: number;
   poster_path: string | null;
+  diffuses: number;
 }
 
 export function listeSeries(db: DB): SerieListe[] {
   const rows = db
     .prepare(
       `SELECT s.id, s.nom, s.actif, s.archive, s.poster_path,
-              COUNT(ev.id) AS nb_episodes
+              COUNT(ev.id) AS nb_episodes,
+              (SELECT COUNT(*) FROM episodes_catalogue c
+                 WHERE c.serie_id = s.id AND c.saison >= 1
+                   AND c.date_diffusion IS NOT NULL AND c.date_diffusion <= date('now')) AS diffuses
          FROM series s
          LEFT JOIN episodes_vus ev ON ev.serie_id = s.id
         GROUP BY s.id
@@ -171,4 +175,77 @@ export function marquerJusquA(db: DB, serieId: number, saison: number, episode: 
   transaction(db, () => {
     for (const e of cibles) marquerEpisodeVu(db, serieId, e.saison, e.episode);
   });
+}
+
+// Supprime le marquage « vu » d'un épisode (annuler / corriger).
+export function demarquerEpisode(db: DB, serieId: number, saison: number, episode: number): void {
+  db.prepare("DELETE FROM episodes_vus WHERE serie_id = ? AND saison = ? AND episode = ?").run(
+    serieId,
+    saison,
+    episode
+  );
+}
+
+export interface EpisodeComplet {
+  saison: number;
+  episode: number;
+  titre: string | null;
+  date_diffusion: string | null;
+  duree_min: number;
+  vu: number; // 0/1
+  vu_le: string | null;
+  diffuse: number; // 0/1 : diffusé (date_diffusion <= aujourd'hui)
+}
+
+// Tous les épisodes du catalogue d'une série (saison 0 incluse) avec leur statut vu/diffusé.
+export function episodesCompletsDeSerie(db: DB, serieId: number): EpisodeComplet[] {
+  const rows = db
+    .prepare(
+      `SELECT c.saison, c.episode, c.titre, c.date_diffusion, c.duree_min,
+              CASE WHEN v.serie_id IS NOT NULL THEN 1 ELSE 0 END AS vu,
+              v.vu_le AS vu_le,
+              CASE WHEN c.date_diffusion IS NOT NULL AND c.date_diffusion <= date('now')
+                   THEN 1 ELSE 0 END AS diffuse
+         FROM episodes_catalogue c
+         LEFT JOIN episodes_vus v
+           ON v.serie_id = c.serie_id AND v.saison = c.saison AND v.episode = c.episode
+        WHERE c.serie_id = ?
+        ORDER BY c.saison, c.episode`
+    )
+    .all(serieId) as unknown as EpisodeComplet[];
+  // node:sqlite : aplatir pour la sérialisation RSC → composant client.
+  return rows.map((r) => ({ ...r }));
+}
+
+export interface Progression {
+  vus: number;
+  diffuses: number;
+  total: number;
+  minutesRestantes: number;
+}
+
+// Avancement d'une série (hors spéciaux) + temps de rattrapage des épisodes diffusés non vus.
+export function progressionSerie(db: DB, serieId: number): Progression {
+  const r = db
+    .prepare(
+      `SELECT
+         (SELECT COUNT(*) FROM episodes_catalogue c
+            WHERE c.serie_id = ? AND c.saison >= 1) AS total,
+         (SELECT COUNT(*) FROM episodes_catalogue c
+            WHERE c.serie_id = ? AND c.saison >= 1
+              AND c.date_diffusion IS NOT NULL AND c.date_diffusion <= date('now')) AS diffuses,
+         (SELECT COUNT(*) FROM episodes_catalogue c
+            JOIN episodes_vus v
+              ON v.serie_id = c.serie_id AND v.saison = c.saison AND v.episode = c.episode
+           WHERE c.serie_id = ? AND c.saison >= 1
+             AND c.date_diffusion IS NOT NULL AND c.date_diffusion <= date('now')) AS vus,
+         (SELECT COALESCE(SUM(c.duree_min), 0) FROM episodes_catalogue c
+           WHERE c.serie_id = ? AND c.saison >= 1
+             AND c.date_diffusion IS NOT NULL AND c.date_diffusion <= date('now')
+             AND NOT EXISTS (SELECT 1 FROM episodes_vus v
+                              WHERE v.serie_id = c.serie_id AND v.saison = c.saison AND v.episode = c.episode)
+         ) AS minutesRestantes`
+    )
+    .get(serieId, serieId, serieId, serieId) as unknown as Progression;
+  return { ...r };
 }
