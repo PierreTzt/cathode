@@ -14,6 +14,68 @@ export interface TmdbSerie {
   backdropPath: string | null;
 }
 
+export interface CatalogueEpisode {
+  saison: number;
+  episode: number;
+  titre: string | null;
+  date_diffusion: string | null;
+  duree_min: number;
+}
+
+export interface CatalogueSerie {
+  statut: "en cours" | "terminée";
+  episodes: CatalogueEpisode[];
+}
+
+const STATUTS_EN_COURS = new Set(["Returning Series", "In Production", "Planned", "Pilot"]);
+
+export async function fetchSeriesEpisodes(
+  tmdbId: number,
+  fetchImpl: typeof fetch = fetch
+): Promise<CatalogueSerie | null> {
+  const token = process.env.TMDB_READ_TOKEN;
+  if (!token) return null;
+  const headers = { Authorization: `Bearer ${token}`, accept: "application/json" };
+  try {
+    const resSerie = await fetchImpl(`https://api.themoviedb.org/3/tv/${tmdbId}`, { headers });
+    if (!resSerie.ok) return null;
+    const serie = (await resSerie.json()) as {
+      status?: string;
+      seasons?: Array<{ season_number: number }>;
+    };
+    const statut: CatalogueSerie["statut"] = STATUTS_EN_COURS.has(serie.status ?? "")
+      ? "en cours"
+      : "terminée";
+    const saisons = (serie.seasons ?? [])
+      .map((s) => s.season_number)
+      .filter((n) => Number.isInteger(n))
+      .sort((a, b) => a - b);
+    const episodes: CatalogueEpisode[] = [];
+    for (const n of saisons) {
+      const resSaison = await fetchImpl(
+        `https://api.themoviedb.org/3/tv/${tmdbId}/season/${n}`,
+        { headers }
+      );
+      if (!resSaison.ok) continue;
+      const saison = (await resSaison.json()) as {
+        episodes?: Array<{ episode_number: number; name?: string; air_date?: string; runtime?: number }>;
+      };
+      for (const e of saison.episodes ?? []) {
+        episodes.push({
+          saison: n,
+          episode: e.episode_number,
+          titre: e.name ? e.name : null,
+          date_diffusion: e.air_date ? e.air_date : null,
+          duree_min: typeof e.runtime === "number" ? e.runtime : 0,
+        });
+      }
+    }
+    return { statut, episodes };
+  } catch {
+    return null;
+  }
+}
+
 export async function findByTvdbId(
   tvdbId: string,
   fetchImpl: typeof fetch = fetch
