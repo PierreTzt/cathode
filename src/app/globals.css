@@ -144,6 +144,49 @@ th { color: var(--muted); font-weight: 600; }
 .tracker-ep.a-venir { opacity: .5; }
 .tracker-ep.a-venir label { cursor: default; }
 
+/* Écran « À venir » */
+.avenir-jour { margin-top: 22px; }
+.avenir-date { font-size: 1.05rem; margin: 0 0 10px; text-transform: capitalize; }
+.avenir-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.avenir-ep { display: flex; align-items: center; gap: 12px; }
+.avenir-poster { width: 40px; height: 60px; object-fit: cover; border-radius: 5px; flex: none; box-shadow: 0 3px 10px rgba(0,0,0,.5); }
+.avenir-nom { font-weight: 600; }
+.avenir-nom:hover { color: var(--gold); }
+
+/* Watchlist « à voir » */
+.avoir-ajout { display: flex; gap: 8px; align-items: center; margin: 8px 0 16px; }
+.avoir-ajout .search { margin: 0; }
+.avoir-ajout button { background: var(--gold); color: var(--gold-ink); border: none; border-radius: 8px; padding: 10px 14px; font-weight: 700; cursor: pointer; }
+.avoir-ajout button:disabled { opacity: .5; cursor: default; }
+.avoir-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-width: 460px; }
+.avoir-item { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 9px 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; }
+.avoir-x { background: transparent; color: var(--muted); border: none; cursor: pointer; font-size: 1rem; padding: 2px 6px; }
+.avoir-x:hover { color: var(--text); }
+
+/* Note & favori (détail série) */
+.notefav { display: flex; align-items: center; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+.fav-btn { background: transparent; border: 1px solid var(--border); border-radius: 999px;
+  width: 34px; height: 34px; color: var(--muted); font-size: 1.1rem; cursor: pointer; line-height: 1; }
+.fav-btn.actif { color: #e0607a; border-color: #e0607a; }
+.fav-btn:disabled { opacity: .6; cursor: default; }
+.note-etoiles { display: flex; align-items: center; gap: 1px; }
+.note-pt { background: transparent; border: none; color: var(--gold); cursor: pointer; font-size: 1.05rem; padding: 0 1px; line-height: 1; }
+.note-pt:disabled { cursor: default; }
+.note-val { margin-left: 8px; font-size: .85rem; }
+
+/* Barres de stats */
+.barres { display: flex; flex-direction: column; gap: 6px; max-width: 560px; }
+.barre-ligne { display: grid; grid-template-columns: 120px 1fr 44px; align-items: center; gap: 10px; }
+.barre-label { color: var(--muted); font-size: .88rem; text-transform: capitalize; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.barre-piste { height: 10px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.barre-remplissage { display: block; height: 100%; background: var(--gold); }
+.barre-val { text-align: right; font-size: .85rem; font-variant-numeric: tabular-nums; }
+
+/* Cœur favori sur les affiches */
+.poster-fav { position: absolute; top: 8px; left: 8px; color: #e0607a;
+  font-size: 1rem; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
+
 /* En-tête détail série */
 .serie-hero { position: relative; border-radius: 16px; overflow: hidden; margin-bottom: 24px; border: 1px solid var(--border); }
 .serie-hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; filter: brightness(.35); }

@@ -18,6 +18,9 @@ export function migrate(db: DB): void {
   add("backdrop_path", "TEXT");
   add("catalogue_maj_le", "TEXT");
   add("statut_tmdb", "TEXT");
+  add("note", "INTEGER");
+  add("favori", "INTEGER DEFAULT 0");
+  add("genres", "TEXT");
 }
 
 export function getDb(path: string = DEFAULT_PATH): DB {

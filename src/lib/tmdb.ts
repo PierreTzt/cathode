@@ -14,6 +14,24 @@ export interface TmdbSerie {
   backdropPath: string | null;
 }
 
+export async function fetchGenres(
+  tmdbId: number,
+  fetchImpl: typeof fetch = fetch
+): Promise<string[] | null> {
+  const token = process.env.TMDB_READ_TOKEN;
+  if (!token) return null;
+  try {
+    const res = await fetchImpl(`https://api.themoviedb.org/3/tv/${tmdbId}`, {
+      headers: { Authorization: `Bearer ${token}`, accept: "application/json" },
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as { genres?: Array<{ name?: string }> };
+    return (json.genres ?? []).map((g) => g.name).filter((n): n is string => !!n);
+  } catch {
+    return null;
+  }
+}
+
 export interface CatalogueEpisode {
   saison: number;
   episode: number;

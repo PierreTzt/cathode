@@ -8,12 +8,13 @@ export interface SerieListe {
   archive: number;
   poster_path: string | null;
   diffuses: number;
+  favori: number;
 }
 
 export function listeSeries(db: DB): SerieListe[] {
   const rows = db
     .prepare(
-      `SELECT s.id, s.nom, s.actif, s.archive, s.poster_path,
+      `SELECT s.id, s.nom, s.actif, s.archive, s.poster_path, s.favori,
               COUNT(ev.id) AS nb_episodes,
               (SELECT COUNT(*) FROM episodes_catalogue c
                  WHERE c.serie_id = s.id AND c.saison >= 1
@@ -30,15 +31,29 @@ export function listeSeries(db: DB): SerieListe[] {
   return rows.map((r) => ({ ...r }));
 }
 
-export function detailSerie(
-  db: DB,
-  id: number
-): { nom: string; poster_path: string | null; backdrop_path: string | null } | undefined {
-  return db
-    .prepare("SELECT nom, poster_path, backdrop_path FROM series WHERE id = ?")
-    .get(id) as unknown as
-    | { nom: string; poster_path: string | null; backdrop_path: string | null }
-    | undefined;
+export interface DetailSerie {
+  nom: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  note: number | null;
+  favori: number;
+}
+
+export function detailSerie(db: DB, id: number): DetailSerie | undefined {
+  const row = db
+    .prepare("SELECT nom, poster_path, backdrop_path, note, favori FROM series WHERE id = ?")
+    .get(id) as unknown as DetailSerie | undefined;
+  return row ? { ...row } : undefined;
+}
+
+export function noterSerie(db: DB, id: number, note: number | null): void {
+  db.prepare("UPDATE series SET note = ? WHERE id = ?").run(note, id);
+}
+
+export function basculerFavori(db: DB, id: number): void {
+  db.prepare(
+    "UPDATE series SET favori = CASE WHEN favori = 1 THEN 0 ELSE 1 END WHERE id = ?"
+  ).run(id);
 }
 
 export interface EpisodeVu {
@@ -65,7 +80,13 @@ export interface Stats {
   nbFilms: number;
   parAnnee: { annee: string; nb: number }[];
   topSeries: { nom: string; nb: number }[];
+  parGenre: { genre: string; nb: number }[];
+  parJourSemaine: { jour: string; nb: number }[];
+  topBinge: { jour: string; nb: number } | null;
+  parMois: { mois: string; nb: number }[];
 }
+
+const JOURS_FR = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
 
 export function stats(db: DB): Stats {
   const one = (sql: string): number =>
@@ -73,6 +94,54 @@ export function stats(db: DB): Stats {
   const totalMinutes =
     one("SELECT COALESCE(SUM(duree_min),0) AS n FROM episodes_vus") +
     one("SELECT COALESCE(SUM(duree_min),0) AS n FROM films_vus");
+
+  // Genres : split des chaînes "Drame, Comédie" en JS puis comptage par série.
+  const genresRows = db
+    .prepare("SELECT genres FROM series WHERE genres IS NOT NULL AND genres <> ''")
+    .all() as unknown as { genres: string }[];
+  const compteur = new Map<string, number>();
+  for (const r of genresRows) {
+    for (const g of r.genres.split(",").map((x) => x.trim()).filter(Boolean)) {
+      compteur.set(g, (compteur.get(g) ?? 0) + 1);
+    }
+  }
+  const parGenre = [...compteur.entries()]
+    .map(([genre, nb]) => ({ genre, nb }))
+    .sort((a, b) => b.nb - a.nb || a.genre.localeCompare(b.genre))
+    .slice(0, 10);
+
+  // Jour de la semaine (%w : 0=dimanche … 6=samedi), réordonné lundi→dimanche.
+  const jsRows = db
+    .prepare(
+      `SELECT CAST(strftime('%w', vu_le) AS INTEGER) AS j, COUNT(*) AS nb
+         FROM episodes_vus WHERE vu_le IS NOT NULL AND vu_le <> ''
+        GROUP BY j`
+    )
+    .all() as unknown as { j: number; nb: number }[];
+  const parJourNb = new Map(jsRows.map((r) => [r.j, r.nb]));
+  const parJourSemaine = [1, 2, 3, 4, 5, 6, 0].map((j) => ({
+    jour: JOURS_FR[j],
+    nb: parJourNb.get(j) ?? 0,
+  }));
+
+  const bingeRow = db
+    .prepare(
+      `SELECT substr(vu_le,1,10) AS jour, COUNT(*) AS nb
+         FROM episodes_vus WHERE vu_le IS NOT NULL AND vu_le <> ''
+        GROUP BY jour ORDER BY nb DESC, jour DESC LIMIT 1`
+    )
+    .get() as unknown as { jour: string; nb: number } | undefined;
+
+  const parMois = (
+    db
+      .prepare(
+        `SELECT substr(vu_le,1,7) AS mois, COUNT(*) AS nb
+           FROM episodes_vus WHERE vu_le IS NOT NULL AND vu_le <> ''
+          GROUP BY mois ORDER BY mois DESC LIMIT 12`
+      )
+      .all() as unknown as { mois: string; nb: number }[]
+  ).reverse();
+
   return {
     totalMinutes,
     nbEpisodes: one("SELECT COUNT(*) AS n FROM episodes_vus"),
@@ -92,6 +161,10 @@ export function stats(db: DB): Stats {
           GROUP BY s.id ORDER BY nb DESC LIMIT 10`
       )
       .all() as unknown as { nom: string; nb: number }[],
+    parGenre,
+    parJourSemaine,
+    topBinge: bingeRow ? { ...bingeRow } : null,
+    parMois,
   };
 }
 

@@ -6,6 +6,7 @@ import {
   progressionSerie,
 } from "@/lib/queries";
 import { EpisodesTracker } from "@/app/components/EpisodesTracker";
+import { NoteFavori } from "@/app/components/NoteFavori";
 import { imageUrl } from "@/lib/tmdb";
 import { notFound } from "next/navigation";
 
@@ -47,6 +48,7 @@ export default async function SeriePage({ params }: { params: Promise<{ id: stri
               {prog.vus}/{prog.diffuses} épisodes vus
               {prog.total > prog.diffuses ? ` · ${prog.total} au total` : ""}
             </p>
+            <NoteFavori serieId={serieId} note={serie.note} favori={serie.favori} />
           </div>
         </div>
       </div>

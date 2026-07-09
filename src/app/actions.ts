@@ -6,6 +6,8 @@ import {
   demarquerEpisode,
   ajouterAVoir,
   retirerAVoir,
+  noterSerie,
+  basculerFavori,
 } from "@/lib/queries";
 import { revalidatePath } from "next/cache";
 
@@ -45,4 +47,15 @@ export async function actionAjouterAVoir(titre: string): Promise<void> {
 export async function actionRetirerAVoir(id: number): Promise<void> {
   retirerAVoir(getDb(), id);
   revalidatePath("/films");
+}
+
+export async function actionNoter(serieId: number, note: number | null): Promise<void> {
+  noterSerie(getDb(), serieId, note);
+  revalidatePath(`/series/${serieId}`);
+}
+
+export async function actionFavori(serieId: number): Promise<void> {
+  basculerFavori(getDb(), serieId);
+  revalidatePath(`/series/${serieId}`);
+  revalidatePath("/mes-series");
 }

@@ -18,6 +18,12 @@ export default function StatsPage() {
         <div className="stat-card"><div className="n">{s.nbEpisodes.toLocaleString("fr-FR")}</div><div className="l">Épisodes vus</div></div>
         <div className="stat-card"><div className="n">{s.nbSeries}</div><div className="l">Séries</div></div>
         <div className="stat-card"><div className="n">{s.nbFilms}</div><div className="l">Films</div></div>
+        {s.topBinge && (
+          <div className="stat-card">
+            <div className="n">{s.topBinge.nb}</div>
+            <div className="l">Plus gros binge ({s.topBinge.jour})</div>
+          </div>
+        )}
       </div>
       <p className="muted" style={{ fontSize: "0.9rem" }}>
         Estimation basse : l&apos;export TV Time ne fournit la durée que pour une partie des épisodes,
@@ -43,6 +49,40 @@ export default function StatsPage() {
           ))}
         </tbody>
       </table>
+
+      {s.parGenre.length > 0 && (
+        <>
+          <h2>Par genre</h2>
+          <Barres data={s.parGenre.map((g) => ({ label: g.genre, nb: g.nb }))} />
+        </>
+      )}
+
+      <h2>Par jour de la semaine</h2>
+      <Barres data={s.parJourSemaine.map((d) => ({ label: d.jour, nb: d.nb }))} />
+
+      {s.parMois.length > 0 && (
+        <>
+          <h2>Par mois (12 derniers)</h2>
+          <Barres data={s.parMois.map((m) => ({ label: m.mois, nb: m.nb }))} />
+        </>
+      )}
+    </div>
+  );
+}
+
+function Barres({ data }: { data: { label: string; nb: number }[] }) {
+  const max = Math.max(1, ...data.map((d) => d.nb));
+  return (
+    <div className="barres">
+      {data.map((d) => (
+        <div key={d.label} className="barre-ligne">
+          <span className="barre-label">{d.label}</span>
+          <span className="barre-piste">
+            <span className="barre-remplissage" style={{ width: `${Math.round((d.nb / max) * 100)}%` }} />
+          </span>
+          <span className="barre-val muted">{d.nb}</span>
+        </div>
+      ))}
     </div>
   );
 }

@@ -61,7 +61,13 @@ describe("détail série", () => {
     db.exec(
       "INSERT INTO series (id,source_id,nom,poster_path,backdrop_path) VALUES (1,'a','NCIS','/p.jpg','/b.jpg')"
     );
-    expect(detailSerie(db, 1)).toEqual({ nom: "NCIS", poster_path: "/p.jpg", backdrop_path: "/b.jpg" });
+    expect(detailSerie(db, 1)).toEqual({
+      nom: "NCIS",
+      poster_path: "/p.jpg",
+      backdrop_path: "/b.jpg",
+      note: null,
+      favori: 0,
+    });
   });
 });
 
