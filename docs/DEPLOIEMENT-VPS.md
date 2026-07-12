@@ -38,6 +38,16 @@ onglet **Plus**).
 0 4 */3 * * docker exec monsuivi npm run catalogue >> /var/log/monsuivi-resync.log 2>&1
 ```
 
+### Récap hebdomadaire (notification du dimanche)
+
+En plus de la resync, un récap de la semaine peut être poussé en notification le
+dimanche soir :
+
+```cron
+# MonSuivi — récap hebdo poussé le dimanche à 20 h
+0 20 * * 0 docker exec monsuivi npm run recap >> /var/log/monsuivi-recap.log 2>&1
+```
+
 ### Alternative : service docker-compose dédié
 
 Si l'on préfère tout garder dans `docker-compose.yml`, ajouter un service qui
