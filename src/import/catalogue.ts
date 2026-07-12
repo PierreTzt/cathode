@@ -4,21 +4,32 @@ import { fetchSeriesEpisodes, type CatalogueSerie } from "../lib/tmdb";
 
 export async function majCatalogue(
   db: DB,
-  fetcher: (tmdbId: number) => Promise<CatalogueSerie | null> = (id) => fetchSeriesEpisodes(id)
+  fetcher: (tmdbId: number) => Promise<CatalogueSerie | null> = (id) => fetchSeriesEpisodes(id),
+  options: { forcer?: boolean; serieId?: number } = {}
 ): Promise<{ seriesTraitees: number; episodesCatalogue: number; dureesComblees: number; echecs: number }> {
-  const series = db
-    .prepare(
-      `SELECT id, tmdb_id FROM series
-        WHERE tmdb_id IS NOT NULL
-          AND (catalogue_maj_le IS NULL OR statut_tmdb = 'en cours')`
-    )
-    .all() as unknown as { id: number; tmdb_id: number }[];
+  // `serieId` : une seule série (ajout manuel). `forcer` : toutes les séries
+  // (ex. re-télécharger tout le catalogue en français). Sinon : jamais traitées
+  // ou encore « en cours ».
+  const stmt = db.prepare(
+    options.serieId != null
+      ? `SELECT id, tmdb_id FROM series WHERE id = ? AND tmdb_id IS NOT NULL`
+      : options.forcer
+        ? `SELECT id, tmdb_id FROM series WHERE tmdb_id IS NOT NULL`
+        : `SELECT id, tmdb_id FROM series
+             WHERE tmdb_id IS NOT NULL
+               AND (catalogue_maj_le IS NULL OR statut_tmdb = 'en cours')`
+  );
+  const series = (
+    options.serieId != null ? stmt.all(options.serieId) : stmt.all()
+  ) as unknown as { id: number; tmdb_id: number }[];
 
   const upsert = db.prepare(
-    `INSERT INTO episodes_catalogue (serie_id, saison, episode, titre, date_diffusion, duree_min)
-     VALUES (?, ?, ?, ?, ?, ?)
+    `INSERT INTO episodes_catalogue (serie_id, saison, episode, titre, apercu, still_path, date_diffusion, duree_min)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT (serie_id, saison, episode)
      DO UPDATE SET titre = excluded.titre,
+                   apercu = excluded.apercu,
+                   still_path = excluded.still_path,
                    date_diffusion = excluded.date_diffusion,
                    duree_min = excluded.duree_min`
   );
@@ -45,7 +56,7 @@ export async function majCatalogue(
     }
     transaction(db, () => {
       for (const e of cat.episodes) {
-        upsert.run(s.id, e.saison, e.episode, e.titre, e.date_diffusion, e.duree_min);
+        upsert.run(s.id, e.saison, e.episode, e.titre, e.apercu, e.still_path, e.date_diffusion, e.duree_min);
         episodesCatalogue++;
         if (e.duree_min > 0) {
           const info = combler.run(e.duree_min, s.id, e.saison, e.episode);

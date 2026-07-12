@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { imageUrl } from "@/lib/tmdb";
 
 export interface PosterTileProps {
@@ -13,7 +14,7 @@ export function PosterTile({ id, nom, poster_path, nb_episodes, diffuses, favori
   const src = imageUrl(poster_path, "w342");
   const pct = diffuses > 0 ? Math.min(100, Math.round((nb_episodes / diffuses) * 100)) : null;
   return (
-    <a className="poster-link" href={`/series/${id}`}>
+    <Link className="poster-link" href={`/series/${id}`}>
       <div className="poster-tile">
         {src ? <img src={src} alt={nom} loading="lazy" /> : <div className="poster-fallback">{nom}</div>}
         {favori === 1 && <span className="poster-fav" aria-label="Favori">♥</span>}
@@ -25,6 +26,6 @@ export function PosterTile({ id, nom, poster_path, nb_episodes, diffuses, favori
         )}
       </div>
       <div className="poster-name">{nom}</div>
-    </a>
+    </Link>
   );
 }

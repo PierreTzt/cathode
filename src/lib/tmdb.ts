@@ -2,7 +2,7 @@ const IMG_BASE = "https://image.tmdb.org/t/p";
 
 export function imageUrl(
   path: string | null | undefined,
-  size: "w185" | "w342" | "w780"
+  size: "w185" | "w300" | "w342" | "w780"
 ): string | null {
   if (!path) return null;
   return `${IMG_BASE}/${size}${path}`;
@@ -36,6 +36,8 @@ export interface CatalogueEpisode {
   saison: number;
   episode: number;
   titre: string | null;
+  apercu: string | null;
+  still_path: string | null;
   date_diffusion: string | null;
   duree_min: number;
 }
@@ -55,7 +57,10 @@ export async function fetchSeriesEpisodes(
   if (!token) return null;
   const headers = { Authorization: `Bearer ${token}`, accept: "application/json" };
   try {
-    const resSerie = await fetchImpl(`https://api.themoviedb.org/3/tv/${tmdbId}`, { headers });
+    const resSerie = await fetchImpl(
+      `https://api.themoviedb.org/3/tv/${tmdbId}?language=fr-FR`,
+      { headers }
+    );
     if (!resSerie.ok) return null;
     const serie = (await resSerie.json()) as {
       status?: string;
@@ -71,18 +76,27 @@ export async function fetchSeriesEpisodes(
     const episodes: CatalogueEpisode[] = [];
     for (const n of saisons) {
       const resSaison = await fetchImpl(
-        `https://api.themoviedb.org/3/tv/${tmdbId}/season/${n}`,
+        `https://api.themoviedb.org/3/tv/${tmdbId}/season/${n}?language=fr-FR`,
         { headers }
       );
       if (!resSaison.ok) continue;
       const saison = (await resSaison.json()) as {
-        episodes?: Array<{ episode_number: number; name?: string; air_date?: string; runtime?: number }>;
+        episodes?: Array<{
+          episode_number: number;
+          name?: string;
+          overview?: string;
+          still_path?: string | null;
+          air_date?: string;
+          runtime?: number;
+        }>;
       };
       for (const e of saison.episodes ?? []) {
         episodes.push({
           saison: n,
           episode: e.episode_number,
           titre: e.name ? e.name : null,
+          apercu: e.overview ? e.overview : null,
+          still_path: e.still_path ? e.still_path : null,
           date_diffusion: e.air_date ? e.air_date : null,
           duree_min: typeof e.runtime === "number" ? e.runtime : 0,
         });
@@ -91,6 +105,51 @@ export async function fetchSeriesEpisodes(
     return { statut, episodes };
   } catch {
     return null;
+  }
+}
+
+export interface ResultatRechercheSerie {
+  tmdbId: number;
+  nom: string;
+  annee: string | null;
+  poster_path: string | null;
+  backdrop_path: string | null;
+}
+
+// Recherche de séries sur TMDB (pour l'ajout manuel dans « Mes séries »).
+export async function rechercheSeries(
+  query: string,
+  fetchImpl: typeof fetch = fetch
+): Promise<ResultatRechercheSerie[]> {
+  const token = process.env.TMDB_READ_TOKEN;
+  if (!token || !query.trim()) return [];
+  try {
+    const url =
+      "https://api.themoviedb.org/3/search/tv?language=fr-FR&include_adult=false&page=1&query=" +
+      encodeURIComponent(query.trim());
+    const res = await fetchImpl(url, {
+      headers: { Authorization: `Bearer ${token}`, accept: "application/json" },
+    });
+    if (!res.ok) return [];
+    const json = (await res.json()) as {
+      results?: Array<{
+        id: number;
+        name?: string;
+        original_name?: string;
+        first_air_date?: string;
+        poster_path?: string | null;
+        backdrop_path?: string | null;
+      }>;
+    };
+    return (json.results ?? []).slice(0, 12).map((r) => ({
+      tmdbId: r.id,
+      nom: r.name || r.original_name || "Sans titre",
+      annee: r.first_air_date ? r.first_air_date.slice(0, 4) : null,
+      poster_path: r.poster_path ?? null,
+      backdrop_path: r.backdrop_path ?? null,
+    }));
+  } catch {
+    return [];
   }
 }
 

@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.claude
+data
+gdpr-data
+docs
+tests
+*.log
+.env.local
+.env
+npm-debug.log*
+clé.txt
+tsconfig.tsbuildinfo
+next-env.d.ts

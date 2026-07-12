@@ -9,6 +9,7 @@ import { EpisodesTracker } from "@/app/components/EpisodesTracker";
 import { NoteFavori } from "@/app/components/NoteFavori";
 import { imageUrl } from "@/lib/tmdb";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -34,9 +35,9 @@ export default async function SeriePage({ params }: { params: Promise<{ id: stri
   return (
     <div>
       <p>
-        <a className="muted" href="/">
+        <Link className="muted" href="/">
           ← À suivre
-        </a>
+        </Link>
       </p>
       <div className="serie-hero">
         {bg && <div className="serie-hero-bg" style={{ backgroundImage: `url(${bg})` }} />}

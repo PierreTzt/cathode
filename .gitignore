@@ -9,3 +9,4 @@ gdpr-data/
 data/
 next-env.d.ts
 tsconfig.tsbuildinfo
+.claude/

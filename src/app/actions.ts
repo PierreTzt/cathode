@@ -8,8 +8,13 @@ import {
   retirerAVoir,
   noterSerie,
   basculerFavori,
+  ajouterSerie,
 } from "@/lib/queries";
+import { rechercheSeries, type ResultatRechercheSerie } from "@/lib/tmdb";
+import { majCatalogue } from "@/import/catalogue";
 import { revalidatePath } from "next/cache";
+
+export type ResultatRecherche = ResultatRechercheSerie;
 
 function revalider(serieId: number) {
   revalidatePath("/");
@@ -58,4 +63,26 @@ export async function actionFavori(serieId: number): Promise<void> {
   basculerFavori(getDb(), serieId);
   revalidatePath(`/series/${serieId}`);
   revalidatePath("/mes-series");
+}
+
+export async function actionRechercheSeries(query: string): Promise<ResultatRecherche[]> {
+  return rechercheSeries(query);
+}
+
+// Ajoute une série trouvée sur TMDB puis télécharge son catalogue d'épisodes,
+// pour qu'elle apparaisse aussitôt dans « À suivre ».
+export async function actionAjouterSerie(s: ResultatRecherche): Promise<{ id: number; existait: boolean }> {
+  const db = getDb();
+  const { id, existait } = ajouterSerie(db, {
+    tmdbId: s.tmdbId,
+    nom: s.nom,
+    poster_path: s.poster_path,
+    backdrop_path: s.backdrop_path,
+  });
+  if (!existait) {
+    await majCatalogue(db, undefined, { serieId: id });
+  }
+  revalidatePath("/mes-series");
+  revalidatePath("/");
+  return { id, existait };
 }

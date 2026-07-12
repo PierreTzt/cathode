@@ -1,0 +1,17 @@
+services:
+  monsuivi:
+    build: .
+    image: monsuivi:latest
+    container_name: monsuivi
+    restart: unless-stopped
+    # Exposé uniquement sur la loopback : c'est Caddy qui publie vers l'extérieur.
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      - NODE_ENV=production
+      - BASE_PATH=/monsuivi
+      # TMDB_READ_TOKEN lu depuis le fichier .env (recherche + catalogue à l'ajout de séries)
+      - TMDB_READ_TOKEN=${TMDB_READ_TOKEN:-}
+    volumes:
+      # Persiste la base (et ses fichiers WAL) hors du conteneur
+      - ./data:/app/data

@@ -21,6 +21,17 @@ export function migrate(db: DB): void {
   add("note", "INTEGER");
   add("favori", "INTEGER DEFAULT 0");
   add("genres", "TEXT");
+
+  // Colonnes ajoutées après coup sur episodes_catalogue.
+  const colsCat = (
+    db.prepare("PRAGMA table_info(episodes_catalogue)").all() as unknown as { name: string }[]
+  ).map((c) => c.name);
+  if (!colsCat.includes("apercu")) {
+    db.exec("ALTER TABLE episodes_catalogue ADD COLUMN apercu TEXT");
+  }
+  if (!colsCat.includes("still_path")) {
+    db.exec("ALTER TABLE episodes_catalogue ADD COLUMN still_path TEXT");
+  }
 }
 
 export function getDb(path: string = DEFAULT_PATH): DB {

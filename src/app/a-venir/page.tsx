@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getDb } from "@/lib/db";
 import { aVenir, type EpisodeAVenir } from "@/lib/queries";
 import { imageUrl } from "@/lib/tmdb";
@@ -40,9 +41,9 @@ export default function AVenir() {
                 <li key={`${e.serie_id}-${e.saison}-${e.episode}`} className="avenir-ep">
                   {poster && <img className="avenir-poster" src={poster} alt={e.nom} />}
                   <div>
-                    <a className="avenir-nom" href={`/series/${e.serie_id}`}>
+                    <Link className="avenir-nom" href={`/series/${e.serie_id}`}>
                       {e.nom}
-                    </a>
+                    </Link>
                     <div className="muted">
                       S{e.saison}E{e.episode}
                       {e.titre ? ` — ${e.titre}` : ""}

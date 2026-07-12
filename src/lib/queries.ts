@@ -56,6 +56,25 @@ export function basculerFavori(db: DB, id: number): void {
   ).run(id);
 }
 
+// Ajout manuel d'une série (via recherche TMDB). Idempotent sur tmdb_id : si la
+// série existe déjà, renvoie son id sans rien réinsérer.
+export function ajouterSerie(
+  db: DB,
+  s: { tmdbId: number; nom: string; poster_path: string | null; backdrop_path: string | null }
+): { id: number; existait: boolean } {
+  const existante = db
+    .prepare("SELECT id FROM series WHERE tmdb_id = ?")
+    .get(s.tmdbId) as unknown as { id: number } | undefined;
+  if (existante) return { id: existante.id, existait: true };
+  const info = db
+    .prepare(
+      `INSERT INTO series (nom, tmdb_id, poster_path, backdrop_path, suivi_le, actif, archive)
+       VALUES (?, ?, ?, ?, date('now'), 1, 0)`
+    )
+    .run(s.nom, s.tmdbId, s.poster_path, s.backdrop_path);
+  return { id: Number(info.lastInsertRowid), existait: false };
+}
+
 export interface EpisodeVu {
   saison: number;
   episode: number;
@@ -172,9 +191,12 @@ export interface LigneASuivre {
   serie_id: number;
   nom: string;
   poster_path: string | null;
+  backdrop_path: string | null;
   saison: number;
   episode: number;
   titre: string | null;
+  apercu: string | null;
+  still_path: string | null;
   date_diffusion: string | null;
   nb_en_retard: number;
   dernier_vu: string | null;
@@ -199,14 +221,14 @@ export function tableauASuivre(db: DB, tri: TriASuivre = "prochain"): LigneASuiv
   const rows = db
     .prepare(
       `WITH retard AS (
-         SELECT c.serie_id, c.saison, c.episode, c.titre, c.date_diffusion,
+         SELECT c.serie_id, c.saison, c.episode, c.titre, c.apercu, c.still_path, c.date_diffusion,
                 ROW_NUMBER() OVER (PARTITION BY c.serie_id ORDER BY c.saison, c.episode) AS rn,
                 COUNT(*)    OVER (PARTITION BY c.serie_id) AS nb_en_retard
            FROM episodes_catalogue c
           WHERE ${RETARD_WHERE}
        )
-       SELECT r.serie_id, s.nom, s.poster_path,
-              r.saison, r.episode, r.titre, r.date_diffusion, r.nb_en_retard,
+       SELECT r.serie_id, s.nom, s.poster_path, s.backdrop_path,
+              r.saison, r.episode, r.titre, r.apercu, r.still_path, r.date_diffusion, r.nb_en_retard,
               (SELECT MAX(v.vu_le) FROM episodes_vus v WHERE v.serie_id = r.serie_id) AS dernier_vu
          FROM retard r JOIN series s ON s.id = r.serie_id
         WHERE r.rn = 1

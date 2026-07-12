@@ -35,6 +35,8 @@ CREATE TABLE IF NOT EXISTS episodes_catalogue (
   saison INTEGER NOT NULL,
   episode INTEGER NOT NULL,
   titre TEXT,
+  apercu TEXT,
+  still_path TEXT,
   date_diffusion TEXT,
   duree_min INTEGER NOT NULL DEFAULT 0,
   UNIQUE (serie_id, saison, episode)
