@@ -233,6 +233,104 @@ export async function fetchRecommandations(
   }
 }
 
+export interface ResultatFilm {
+  tmdbId: number;
+  titre: string;
+  annee: string | null;
+  poster_path: string | null;
+}
+
+// Recherche d'un film (pour l'appariement des films vus / watchlist).
+export async function rechercheFilm(
+  nom: string,
+  annee: string | null = null,
+  fetchImpl: typeof fetch = fetch
+): Promise<ResultatFilm | null> {
+  const token = process.env.TMDB_READ_TOKEN;
+  if (!token || !nom.trim()) return null;
+  try {
+    let url =
+      "https://api.themoviedb.org/3/search/movie?language=fr-FR&include_adult=false&page=1&query=" +
+      encodeURIComponent(nom.trim());
+    if (annee) url += `&year=${encodeURIComponent(annee)}`;
+    const res = await fetchImpl(url, {
+      headers: { Authorization: `Bearer ${token}`, accept: "application/json" },
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as {
+      results?: Array<{ id: number; title?: string; original_title?: string; release_date?: string; poster_path?: string | null }>;
+    };
+    const r = json.results?.[0];
+    if (!r) return null;
+    return {
+      tmdbId: r.id,
+      titre: r.title || r.original_title || nom,
+      annee: r.release_date ? r.release_date.slice(0, 4) : null,
+      poster_path: r.poster_path ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export interface FilmDetail {
+  duree_min: number;
+  genres: string[];
+  poster_path: string | null;
+  annee: string | null;
+}
+
+export async function fetchFilmDetail(
+  tmdbId: number,
+  fetchImpl: typeof fetch = fetch
+): Promise<FilmDetail | null> {
+  const token = process.env.TMDB_READ_TOKEN;
+  if (!token) return null;
+  try {
+    const res = await fetchImpl(`https://api.themoviedb.org/3/movie/${tmdbId}?language=fr-FR`, {
+      headers: { Authorization: `Bearer ${token}`, accept: "application/json" },
+    });
+    if (!res.ok) return null;
+    const j = (await res.json()) as {
+      runtime?: number;
+      genres?: Array<{ name?: string }>;
+      poster_path?: string | null;
+      release_date?: string;
+    };
+    return {
+      duree_min: typeof j.runtime === "number" ? j.runtime : 0,
+      genres: (j.genres ?? []).map((g) => g.name).filter((n): n is string => !!n),
+      poster_path: j.poster_path ?? null,
+      annee: j.release_date ? j.release_date.slice(0, 4) : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchFilmProviders(
+  tmdbId: number,
+  fetchImpl: typeof fetch = fetch
+): Promise<Provider[] | null> {
+  const token = process.env.TMDB_READ_TOKEN;
+  if (!token) return null;
+  try {
+    const res = await fetchImpl(
+      `https://api.themoviedb.org/3/movie/${tmdbId}/watch/providers`,
+      { headers: { Authorization: `Bearer ${token}`, accept: "application/json" } }
+    );
+    if (!res.ok) return null;
+    const json = (await res.json()) as {
+      results?: { FR?: { flatrate?: Array<{ provider_name?: string; logo_path?: string | null }> } };
+    };
+    return (json.results?.FR?.flatrate ?? [])
+      .map((p) => ({ nom: p.provider_name ?? "", logo_path: p.logo_path ?? null }))
+      .filter((p) => p.nom !== "");
+  } catch {
+    return null;
+  }
+}
+
 export interface CastMembre {
   tmdbId: number;
   nom: string;

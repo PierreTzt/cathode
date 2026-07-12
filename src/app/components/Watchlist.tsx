@@ -1,7 +1,8 @@
 "use client";
 import { useState, useTransition } from "react";
 import type { AVoir } from "@/lib/queries";
-import { actionAjouterAVoir, actionRetirerAVoir } from "@/app/actions";
+import { imageUrl } from "@/lib/tmdb";
+import { actionAjouterAVoir, actionRetirerAVoir, actionMarquerFilmVu } from "@/app/actions";
 
 export function Watchlist({ items }: { items: AVoir[] }) {
   const [pending, start] = useTransition();
@@ -18,6 +19,10 @@ export function Watchlist({ items }: { items: AVoir[] }) {
   const retirer = (id: number) =>
     start(async () => {
       await actionRetirerAVoir(id);
+    });
+  const vu = (id: number) =>
+    start(async () => {
+      await actionMarquerFilmVu(id);
     });
 
   return (
@@ -39,20 +44,40 @@ export function Watchlist({ items }: { items: AVoir[] }) {
       {items.length === 0 ? (
         <p className="muted">Ta liste « à voir » est vide.</p>
       ) : (
-        <ul className="avoir-liste">
-          {items.map((a) => (
-            <li key={a.id} className="avoir-item">
-              <span>{a.titre}</span>
-              <button
-                className="avoir-x"
-                onClick={() => retirer(a.id)}
-                disabled={pending}
-                aria-label={`Retirer ${a.titre}`}
-              >
-                ✕
-              </button>
-            </li>
-          ))}
+        <ul className="avoir-liste2">
+          {items.map((a) => {
+            const src = imageUrl(a.poster_path, "w185");
+            return (
+              <li key={a.id} className="avoir-item2">
+                {src ? (
+                  <img className="avoir-poster" src={src} alt={a.titre} loading="lazy" />
+                ) : (
+                  <div className="avoir-poster avoir-noimg" aria-hidden>
+                    🎬
+                  </div>
+                )}
+                <div className="avoir-info">
+                  <div className="avoir-titre">
+                    {a.titre}
+                    {a.annee ? <span className="muted"> ({a.annee})</span> : ""}
+                  </div>
+                  <div className="avoir-boutons">
+                    <button className="avoir-vu" onClick={() => vu(a.id)} disabled={pending}>
+                      J&apos;ai vu
+                    </button>
+                    <button
+                      className="avoir-x"
+                      onClick={() => retirer(a.id)}
+                      disabled={pending}
+                      aria-label={`Retirer ${a.titre}`}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

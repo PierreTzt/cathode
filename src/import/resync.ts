@@ -13,6 +13,7 @@ import { majCastToutes } from "./cast";
 import { majRecommandationsToutes } from "./recommandationsSeries";
 import { construireSuggestions } from "./suggestions";
 import { syncJellyfin } from "./jellyfin";
+import { enrichFilms } from "./films";
 
 export interface ResumeResync {
   seriesTraitees: number;
@@ -21,6 +22,7 @@ export interface ResumeResync {
   cast: number;
   recommandations: number;
   suggestions: number;
+  films: number;
   pushEnvoyes: number;
   jellyfinAjoutes: number;
   echecs: number;
@@ -37,6 +39,7 @@ export async function resync(db: DB, options: { forcer?: boolean } = {}): Promis
   const recos = await majRecommandationsToutes(db);
   const sugg = await construireSuggestions(db);
   appMetaSet(db, "suggestions", JSON.stringify(sugg));
+  const films = await enrichFilms(db);
 
   // Sync Jellyfin optionnelle (si activée et configurée).
   let jellyfinAjoutes = 0;
@@ -83,6 +86,7 @@ export async function resync(db: DB, options: { forcer?: boolean } = {}): Promis
     cast: cast.traitees,
     recommandations: recos.traitees,
     suggestions: sugg.length,
+    films: films.filmsEnrichis + films.watchlistEnrichis,
     pushEnvoyes,
     jellyfinAjoutes,
     echecs: cat.echecs + prov.echecs + cast.echecs,

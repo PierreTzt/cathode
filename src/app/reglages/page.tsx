@@ -5,6 +5,7 @@ import { AvenirVueReglage } from "@/app/components/AvenirVueReglage";
 import { NotifsToggle } from "@/app/components/NotifsToggle";
 import { ResyncBouton } from "@/app/components/ResyncBouton";
 import { JellyfinReglages } from "@/app/components/JellyfinReglages";
+import { Restauration } from "@/app/components/Restauration";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,12 @@ export default function ReglagesPage() {
         <a className="notifs-btn secondaire" href={`${BASE}/api/backup`} download>
           Télécharger une sauvegarde
         </a>
+        <div style={{ marginTop: 14 }}>
+          <p className="muted" style={{ margin: "0 0 6px" }}>
+            Restaurer une sauvegarde (remplace la base actuelle — un backup est fait avant) :
+          </p>
+          <Restauration />
+        </div>
       </section>
 
       <section className="plus-bloc">

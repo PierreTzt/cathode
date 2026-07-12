@@ -572,3 +572,48 @@ a.journal-lien:hover { border-color: var(--gold); }
   .cal-cell { min-height: 50px; }
   .cal-ep { width: 15px; height: 22px; }
 }
+
+/* ---- Phase 8 ---- */
+
+/* Récap hebdo (accueil) */
+.recap-semaine { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  margin: 0 0 16px; padding: 10px 14px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; }
+.recap-titre { font-weight: 800; color: var(--gold); font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; }
+.recap-txt { font-size: .9rem; }
+.recap-txt strong { color: var(--gold); }
+
+/* À suivre : barre (filtre + hasard) */
+.suivi-barre { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 16px; }
+.hasard-btn { background: var(--panel); border: 1px solid var(--border); color: var(--text);
+  border-radius: 10px; padding: 9px 14px; font-size: .88rem; font-weight: 600; cursor: pointer; }
+.hasard-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+.hasard-btn:disabled { opacity: .5; cursor: default; }
+
+/* Grille de films */
+.film-grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+.film-carte { display: flex; flex-direction: column; gap: 4px; }
+.film-poster { position: relative; aspect-ratio: 2/3; border-radius: var(--radius); overflow: hidden;
+  background: var(--panel-2); box-shadow: 0 4px 16px rgba(0,0,0,.35); }
+.film-poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.film-nom { font-size: .85rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.film-etoiles { display: flex; }
+.film-date { font-size: .76rem; }
+
+/* Watchlist enrichie */
+.avoir-liste2 { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.avoir-item2 { display: flex; gap: 10px; padding: 8px; background: var(--panel);
+  border: 1px solid var(--border); border-radius: 10px; }
+.avoir-poster { width: 46px; height: 69px; object-fit: cover; border-radius: 6px; flex: none; }
+.avoir-noimg { display: grid; place-items: center; font-size: 1.2rem; background: var(--panel-2); }
+.avoir-info { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1; }
+.avoir-titre { font-weight: 600; font-size: .88rem; }
+.avoir-boutons { display: flex; gap: 8px; margin-top: auto; }
+.avoir-vu { background: var(--gold); color: var(--gold-ink); border: none; border-radius: 999px;
+  padding: 5px 12px; font-weight: 700; font-size: .78rem; cursor: pointer; }
+.avoir-vu:disabled { opacity: .55; cursor: default; }
+
+/* Restauration */
+.restore { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.restore-input { font-size: .82rem; color: var(--muted); max-width: 100%; }
+.restore-msg { width: 100%; margin: 4px 0 0; }

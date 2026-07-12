@@ -6,6 +6,8 @@ import {
   demarquerEpisode,
   ajouterAVoir,
   retirerAVoir,
+  marquerFilmVu,
+  noterFilm,
   noterSerie,
   noterEpisode,
   basculerFavori,
@@ -64,6 +66,16 @@ export async function actionAjouterAVoir(titre: string): Promise<void> {
 
 export async function actionRetirerAVoir(id: number): Promise<void> {
   retirerAVoir(getDb(), id);
+  revalidatePath("/films");
+}
+
+export async function actionMarquerFilmVu(id: number): Promise<void> {
+  marquerFilmVu(getDb(), id);
+  revalidatePath("/films");
+}
+
+export async function actionNoterFilm(nom: string, note: number | null): Promise<void> {
+  noterFilm(getDb(), nom, note);
   revalidatePath("/films");
 }
 

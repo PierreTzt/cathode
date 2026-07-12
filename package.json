@@ -11,6 +11,7 @@
     "catalogue": "node --env-file-if-exists=.env.local --import tsx src/import/catalogueRun.ts",
     "genres": "node --env-file-if-exists=.env.local --import tsx src/import/enrichGenresRun.ts",
     "backup": "node --import tsx src/import/backupRun.ts",
+    "recap": "node --env-file-if-exists=.env.local --import tsx src/import/recapRun.ts",
     "import-avoir": "node --import tsx src/import/importAVoirRun.ts",
     "test": "vitest run"
   },

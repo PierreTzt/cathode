@@ -1,6 +1,6 @@
 import webpush from "web-push";
 import type { DB } from "./db";
-import { listePushSubs, supprimerPushSub } from "./queries";
+import { listePushSubs, supprimerPushSub, compterPushSubs, recapHebdo } from "./queries";
 
 let configure = false;
 
@@ -49,4 +49,18 @@ export async function envoyerATous(
     }
   }
   return { envoyes, supprimes };
+}
+
+// Notification hebdomadaire (récap de la semaine) — utilisée par le cron dimanche.
+export async function envoyerRecapHebdo(db: DB): Promise<{ envoyes: number }> {
+  const r = recapHebdo(db);
+  if ((r.nbEpisodes === 0 && r.nbFilms === 0) || compterPushSubs(db) === 0) return { envoyes: 0 };
+  const h = Math.round(r.minutes / 60);
+  const corps =
+    `${r.nbEpisodes} épisode${r.nbEpisodes > 1 ? "s" : ""}` +
+    (r.nbFilms > 0 ? `, ${r.nbFilms} film${r.nbFilms > 1 ? "s" : ""}` : "") +
+    ` · ${h} h` +
+    (r.topSerie ? ` · surtout ${r.topSerie}` : "");
+  const res = await envoyerATous(db, { titre: "Ta semaine sur MonSuivi", corps, url: "/stats" });
+  return { envoyes: res.envoyes };
 }

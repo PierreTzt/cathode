@@ -42,6 +42,31 @@ export function migrate(db: DB): void {
   if (!colsCat.includes("still_path")) {
     db.exec("ALTER TABLE episodes_catalogue ADD COLUMN still_path TEXT");
   }
+
+  // Colonnes ajoutées après coup sur d'autres tables (films & watchlist enrichis).
+  const addTo = (table: string, name: string, type: string) => {
+    const c = (
+      db.prepare(`PRAGMA table_info(${table})`).all() as unknown as { name: string }[]
+    ).map((r) => r.name);
+    if (!c.includes(name)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${name} ${type}`);
+  };
+  for (const [n, t] of [
+    ["tmdb_id", "INTEGER"],
+    ["poster_path", "TEXT"],
+    ["annee", "TEXT"],
+    ["note", "INTEGER"],
+    ["genres", "TEXT"],
+    ["providers", "TEXT"],
+  ] as const) {
+    addTo("films_vus", n, t);
+  }
+  for (const [n, t] of [
+    ["tmdb_id", "INTEGER"],
+    ["poster_path", "TEXT"],
+    ["annee", "TEXT"],
+  ] as const) {
+    addTo("a_voir", n, t);
+  }
 }
 
 export function getDb(path: string = DEFAULT_PATH): DB {

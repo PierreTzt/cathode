@@ -24,6 +24,7 @@ async function main() {
   console.log(`Casting MàJ        : ${r.cast}`);
   console.log(`Similaires MàJ     : ${r.recommandations}`);
   console.log(`Suggestions        : ${r.suggestions}`);
+  console.log(`Films enrichis     : ${r.films}`);
   console.log(`Notifications push : ${r.pushEnvoyes}`);
   console.log(`Jellyfin ajoutés   : ${r.jellyfinAjoutes}`);
   console.log(`Échecs             : ${r.echecs}`);

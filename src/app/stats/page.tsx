@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getDb } from "@/lib/db";
-import { stats, meilleursEpisodes, activiteParJour } from "@/lib/queries";
+import { stats, meilleursEpisodes, activiteParJour, progressionGlobale } from "@/lib/queries";
 import { Heatmap } from "@/app/components/Heatmap";
 
 export const dynamic = "force-dynamic";
@@ -10,6 +10,7 @@ export default function StatsPage() {
   const s = stats(db);
   const tops = meilleursEpisodes(db, 10);
   const activite = activiteParJour(db);
+  const pg = progressionGlobale(db);
   const jours = Math.floor(s.totalMinutes / 60 / 24);
   const heures = Math.floor((s.totalMinutes / 60) % 24);
   return (
@@ -20,6 +21,24 @@ export default function StatsPage() {
           → Voir mon bilan annuel
         </Link>
       </p>
+
+      {pg.total > 0 && (
+        <>
+          <h2>Progression de la bibliothèque</h2>
+          <div className="prog-bandeau" style={{ maxWidth: 560 }}>
+            <div className="prog-barre">
+              <div className="prog-remplissage" style={{ width: `${pg.pct}%` }} />
+            </div>
+            <div className="prog-legende">
+              <span>
+                <strong>{pg.pct}%</strong> vu ({pg.vus.toLocaleString("fr-FR")}/
+                {pg.total.toLocaleString("fr-FR")} épisodes diffusés)
+              </span>
+              <span className="muted">{pg.seriesCompletes} série(s) terminée(s) à 100 %</span>
+            </div>
+          </div>
+        </>
+      )}
 
       <h2>Activité (12 derniers mois)</h2>
       <Heatmap data={activite} />

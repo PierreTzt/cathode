@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getDb } from "@/lib/db";
-import { tableauASuivre, nouveautes, type TriASuivre } from "@/lib/queries";
+import { tableauASuivre, nouveautes, recapHebdo, type TriASuivre } from "@/lib/queries";
 import { SuiviListe } from "@/app/components/SuiviListe";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +15,7 @@ export default async function ASuivre({
   const db = getDb();
   const lignes = tableauASuivre(db, mode);
   const nouv = nouveautes(db);
+  const recap = recapHebdo(db);
   if (lignes.length === 0) {
     return (
       <div>
@@ -41,6 +42,7 @@ export default async function ASuivre({
       </h1>
 
       <NouveautesBandeau nouv={nouv} />
+      <RecapSemaine recap={recap} />
 
       <div className="tri-selecteur">
         <span className="tri-label">Trier</span>
@@ -52,6 +54,26 @@ export default async function ASuivre({
         </Link>
       </div>
       <SuiviListe lignes={lignes} />
+    </div>
+  );
+}
+
+function RecapSemaine({
+  recap,
+}: {
+  recap: { nbEpisodes: number; minutes: number; nbFilms: number; topSerie: string | null };
+}) {
+  if (recap.nbEpisodes === 0 && recap.nbFilms === 0) return null;
+  const h = Math.round(recap.minutes / 60);
+  return (
+    <div className="recap-semaine">
+      <span className="recap-titre">Ta semaine</span>
+      <span className="recap-txt">
+        <strong>{recap.nbEpisodes}</strong> épisode{recap.nbEpisodes > 1 ? "s" : ""}
+        {recap.nbFilms > 0 ? ` · ${recap.nbFilms} film${recap.nbFilms > 1 ? "s" : ""}` : ""} ·{" "}
+        <strong>{h} h</strong>
+        {recap.topSerie ? ` · surtout ${recap.topSerie}` : ""}
+      </span>
     </div>
   );
 }
