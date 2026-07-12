@@ -7,11 +7,13 @@ services:
     # Exposé uniquement sur la loopback : c'est Caddy qui publie vers l'extérieur.
     ports:
       - "127.0.0.1:3000:3000"
+    # Charge TMDB_READ_TOKEN + clés VAPID (VAPID_PUBLIC_KEY/PRIVATE_KEY/SUBJECT)
+    # depuis le fichier .env (non versionné).
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
       - BASE_PATH=/monsuivi
-      # TMDB_READ_TOKEN lu depuis le fichier .env (recherche + catalogue à l'ajout de séries)
-      - TMDB_READ_TOKEN=${TMDB_READ_TOKEN:-}
     volumes:
       # Persiste la base (et ses fichiers WAL) hors du conteneur
       - ./data:/app/data
