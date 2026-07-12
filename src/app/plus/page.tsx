@@ -3,6 +3,7 @@ import { getDb } from "@/lib/db";
 import { appMetaGet } from "@/lib/queries";
 import { ResyncBouton } from "@/app/components/ResyncBouton";
 import { SuggestionsListe } from "@/app/components/SuggestionsListe";
+import { NotifsToggle } from "@/app/components/NotifsToggle";
 import type { Suggestion } from "@/import/suggestions";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +19,7 @@ function lireSuggestions(json: string | null): Suggestion[] {
 }
 
 const LIENS = [
+  { href: "/recherche", label: "Rechercher", desc: "Séries, épisodes, TMDB" },
   { href: "/films", label: "Films", desc: "Films vus & watchlist" },
   { href: "/stats", label: "Statistiques", desc: "Temps, genres, activité" },
   { href: "/bilan", label: "Bilan annuel", desc: "Ton année en séries" },
@@ -39,6 +41,14 @@ export default function PlusPage() {
           La mise à jour automatique tourne tous les 3 jours sur le serveur.
         </p>
         <ResyncBouton derniereResync={derniere} />
+      </section>
+
+      <section className="plus-bloc">
+        <h2>Notifications</h2>
+        <p className="muted" style={{ marginTop: 0 }}>
+          Reçois une alerte quand un nouvel épisode d&apos;une série suivie est diffusé.
+        </p>
+        <NotifsToggle />
       </section>
 
       <section className="plus-bloc">

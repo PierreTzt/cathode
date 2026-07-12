@@ -23,6 +23,12 @@ export function migrate(db: DB): void {
   add("genres", "TEXT");
   // Plateformes de streaming (JSON [{nom, logo_path}]) rafraîchies à la resync.
   add("providers", "TEXT");
+  // Statut de suivi manuel : actif (défaut) | pause | abandonne.
+  add("suivi_statut", "TEXT DEFAULT 'actif'");
+  // Casting (JSON top ~10) et séries similaires (JSON), rafraîchis à la resync.
+  // « casting » et non « cast » : CAST est un mot réservé SQLite.
+  add("casting", "TEXT");
+  add("recommandations", "TEXT");
 
   // Colonnes ajoutées après coup sur episodes_catalogue.
   const colsCat = (

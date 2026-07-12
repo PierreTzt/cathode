@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getDb } from "@/lib/db";
 import { tableauASuivre, nouveautes, type TriASuivre } from "@/lib/queries";
-import { ProchainEpisode } from "@/app/components/ProchainEpisode";
+import { SuiviListe } from "@/app/components/SuiviListe";
 
 export const dynamic = "force-dynamic";
 
@@ -51,11 +51,7 @@ export default async function ASuivre({
           Prochain épisode
         </Link>
       </div>
-      <div className="suivi-liste">
-        {lignes.map((l) => (
-          <ProchainEpisode key={l.serie_id} ligne={l} />
-        ))}
-      </div>
+      <SuiviListe lignes={lignes} />
     </div>
   );
 }

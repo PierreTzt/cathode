@@ -440,3 +440,76 @@ a.journal-lien:hover { border-color: var(--gold); }
   border: none; border-radius: 999px; padding: 6px 14px; font-weight: 700; font-size: .8rem; cursor: pointer; }
 .sugg-btn:disabled { opacity: .55; cursor: default; }
 .sugg-ok { margin-top: auto; align-self: flex-start; color: var(--gold); font-weight: 700; font-size: .82rem; }
+
+/* ---- Phase 6 ---- */
+
+/* Statut de suivi manuel (fiche) */
+.statut-suivi { display: inline-flex; gap: 4px; margin-top: 10px; padding: 4px;
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: 999px; }
+.statut-suivi-btn { background: transparent; border: none; color: var(--muted); cursor: pointer;
+  padding: 5px 12px; border-radius: 999px; font-size: .8rem; font-weight: 600; }
+.statut-suivi-btn.actif { background: var(--gold); color: var(--gold-ink); }
+.statut-suivi-btn:disabled { opacity: .6; cursor: default; }
+
+/* Filtre plateforme « ce soir » (À suivre) */
+.prov-filtre { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.prov-puce { background: var(--panel); border: 1px solid var(--border); color: var(--muted);
+  border-radius: 999px; padding: 6px 13px; font-size: .82rem; font-weight: 600; cursor: pointer; }
+.prov-puce:hover { color: var(--text); border-color: var(--gold); }
+.prov-puce.actif { background: var(--gold); color: var(--gold-ink); border-color: var(--gold); }
+
+/* Casting */
+.cast-row { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; }
+.cast-carte { flex: none; width: 92px; }
+.cast-photo { width: 92px; height: 138px; object-fit: cover; border-radius: 10px;
+  box-shadow: 0 3px 12px rgba(0,0,0,.5); display: block; }
+.cast-noimg { display: grid; place-items: center; font-size: 1.6rem; font-weight: 800;
+  color: var(--muted); background: var(--panel-2); }
+.cast-nom { font-size: .82rem; font-weight: 600; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cast-role { font-size: .76rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cast-carte:hover .cast-nom { color: var(--gold); }
+
+/* Courbe de qualité */
+.courbe-saisons { display: flex; flex-wrap: wrap; gap: 18px; }
+.courbe-bloc { }
+.courbe-titre { font-size: .82rem; font-weight: 700; margin-bottom: 4px; }
+.courbe-svg { display: block; }
+
+/* Planificateur de binge */
+.binge { margin-top: 10px; }
+.binge-txt { font-size: .9rem; color: var(--muted); }
+.binge-txt strong { color: var(--gold); }
+.binge select { background: var(--panel); border: 1px solid var(--border); color: var(--text);
+  border-radius: 6px; padding: 2px 4px; font-size: .9rem; }
+
+/* Recherche globale */
+.recherche-form { display: flex; gap: 8px; margin: 4px 0 20px; }
+.recherche-form .search { margin: 0; flex: 1; }
+.recherche-form button { background: var(--gold); color: var(--gold-ink); border: none; border-radius: 10px;
+  padding: 0 18px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.recherche-eps { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 6px; max-width: 640px; }
+.recherche-ep { display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+  padding: 9px 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; }
+.recherche-ep:hover { border-color: var(--gold); }
+.recherche-ep-serie { font-weight: 600; }
+
+/* Heatmap d'activité */
+.heatmap-wrap { overflow-x: auto; padding-bottom: 4px; }
+.heatmap { display: flex; gap: 3px; }
+.hm-col { display: flex; flex-direction: column; gap: 3px; }
+.hm-cell { width: 11px; height: 11px; border-radius: 2px; background: var(--panel-2); }
+.hm-legende { display: flex; align-items: center; gap: 4px; margin-top: 8px; font-size: .78rem; }
+.hm-x { background: transparent; }
+.hm-0 { background: var(--panel-2); }
+.hm-1 { background: rgba(200,178,115,.28); }
+.hm-2 { background: rgba(200,178,115,.5); }
+.hm-3 { background: rgba(200,178,115,.75); }
+.hm-4 { background: var(--gold); }
+
+/* Notifications (Plus) */
+.notifs { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.notifs-btn { background: var(--gold); color: var(--gold-ink); border: none; border-radius: 10px;
+  padding: 11px 18px; font-weight: 700; cursor: pointer; }
+.notifs-btn.secondaire { background: transparent; color: var(--muted); border: 1px solid var(--border); padding: 8px 14px; }
+.notifs-btn:disabled { opacity: .55; cursor: default; }
+.notifs-ok { color: #6fbf8a; font-weight: 700; }

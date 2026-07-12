@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getDb } from "@/lib/db";
-import { stats, meilleursEpisodes } from "@/lib/queries";
+import { stats, meilleursEpisodes, activiteParJour } from "@/lib/queries";
+import { Heatmap } from "@/app/components/Heatmap";
 
 export const dynamic = "force-dynamic";
 
@@ -8,6 +9,7 @@ export default function StatsPage() {
   const db = getDb();
   const s = stats(db);
   const tops = meilleursEpisodes(db, 10);
+  const activite = activiteParJour(db);
   const jours = Math.floor(s.totalMinutes / 60 / 24);
   const heures = Math.floor((s.totalMinutes / 60) % 24);
   return (
@@ -18,6 +20,9 @@ export default function StatsPage() {
           → Voir mon bilan annuel
         </Link>
       </p>
+
+      <h2>Activité (12 derniers mois)</h2>
+      <Heatmap data={activite} />
       <div className="stat-cards">
         <div className="stat-card">
           <div className="n">{jours} j {heures} h</div>

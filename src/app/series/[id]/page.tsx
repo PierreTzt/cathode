@@ -10,7 +10,12 @@ import {
 import { EpisodesTracker } from "@/app/components/EpisodesTracker";
 import { NoteFavori } from "@/app/components/NoteFavori";
 import { StatutBadge } from "@/app/components/StatutBadge";
+import { StatutSuivi } from "@/app/components/StatutSuivi";
 import { Providers } from "@/app/components/Providers";
+import { CastRow } from "@/app/components/CastRow";
+import { CourbeNotes } from "@/app/components/CourbeNotes";
+import { BingePlanner } from "@/app/components/BingePlanner";
+import { SuggestionsListe } from "@/app/components/SuggestionsListe";
 import { imageUrl } from "@/lib/tmdb";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -68,6 +73,7 @@ export default async function SeriePage({ params }: { params: Promise<{ id: stri
             </p>
             <Providers providers={serie.providers} />
             <NoteFavori serieId={serieId} note={serie.note} favori={serie.favori} />
+            <StatutSuivi serieId={serieId} statut={serie.suivi_statut} />
           </div>
         </div>
       </div>
@@ -85,6 +91,7 @@ export default async function SeriePage({ params }: { params: Promise<{ id: stri
               <span className="muted">~{heures(prog.minutesRestantes)} de rattrapage</span>
             )}
           </div>
+          <BingePlanner restants={enRetard} />
         </div>
       )}
 
@@ -92,6 +99,24 @@ export default async function SeriePage({ params }: { params: Promise<{ id: stri
         <EpisodesTracker serieId={serieId} episodes={eps} notes={notes} />
       ) : (
         <FallbackVus serieId={serieId} />
+      )}
+
+      <CourbeNotes notes={notes} />
+      <CastRow cast={serie.cast} />
+
+      {serie.recommandations.length > 0 && (
+        <section>
+          <h2>À regarder après</h2>
+          <SuggestionsListe
+            suggestions={serie.recommandations.map((r) => ({
+              tmdbId: r.tmdbId,
+              nom: r.nom,
+              poster_path: r.poster_path,
+              backdrop_path: r.backdrop_path,
+              raison: "",
+            }))}
+          />
+        </section>
       )}
     </div>
   );

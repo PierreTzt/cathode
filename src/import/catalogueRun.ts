@@ -21,7 +21,10 @@ async function main() {
   console.log(`Séries traitées    : ${r.seriesTraitees}`);
   console.log(`Épisodes catalogue : ${r.episodesCatalogue}`);
   console.log(`Plateformes MàJ    : ${r.providers}`);
+  console.log(`Casting MàJ        : ${r.cast}`);
+  console.log(`Similaires MàJ     : ${r.recommandations}`);
   console.log(`Suggestions        : ${r.suggestions}`);
+  console.log(`Notifications push : ${r.pushEnvoyes}`);
   console.log(`Échecs             : ${r.echecs}`);
   console.log("---------------------------------------");
   db.close();

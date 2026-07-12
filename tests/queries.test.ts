@@ -68,7 +68,10 @@ describe("détail série", () => {
       note: null,
       favori: 0,
       statut_tmdb: null,
+      suivi_statut: "actif",
       providers: [],
+      cast: [],
+      recommandations: [],
     });
   });
 });

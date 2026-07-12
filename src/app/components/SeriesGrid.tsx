@@ -4,7 +4,7 @@ import { PosterTile } from "./PosterTile";
 import type { SerieListe } from "@/lib/queries";
 import { etatSuivi, type EtatSuivi } from "@/lib/etat";
 
-type Filtre = "toutes" | EtatSuivi | "favoris";
+type Filtre = "toutes" | EtatSuivi | "favoris" | "pause" | "abandonne";
 type Tri = "az" | "temps" | "dernier";
 
 const FILTRES: { cle: Filtre; label: string }[] = [
@@ -14,6 +14,8 @@ const FILTRES: { cle: Filtre; label: string }[] = [
   { cle: "pas_commencee", label: "Pas commencée" },
   { cle: "terminee", label: "Terminées" },
   { cle: "favoris", label: "Favoris" },
+  { cle: "pause", label: "En pause" },
+  { cle: "abandonne", label: "Abandonnées" },
 ];
 
 function etatDe(s: SerieListe): EtatSuivi {
@@ -34,10 +36,14 @@ export function SeriesGrid({ series }: { series: SerieListe[] }) {
       pas_commencee: 0,
       terminee: 0,
       favoris: 0,
+      pause: 0,
+      abandonne: 0,
     };
     for (const s of series) {
       c[etatDe(s)]++;
       if (s.favori === 1) c.favoris++;
+      if (s.suivi_statut === "pause") c.pause++;
+      if (s.suivi_statut === "abandonne") c.abandonne++;
     }
     return c;
   }, [series]);
@@ -48,6 +54,8 @@ export function SeriesGrid({ series }: { series: SerieListe[] }) {
       if (needle && !s.nom.toLowerCase().includes(needle)) return false;
       if (filtre === "toutes") return true;
       if (filtre === "favoris") return s.favori === 1;
+      if (filtre === "pause") return s.suivi_statut === "pause";
+      if (filtre === "abandonne") return s.suivi_statut === "abandonne";
       return etatDe(s) === filtre;
     });
     out = [...out].sort((a, b) => {

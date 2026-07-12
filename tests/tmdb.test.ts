@@ -5,6 +5,7 @@ import {
   fetchSeriesEpisodes,
   fetchProviders,
   fetchRecommandations,
+  fetchCast,
 } from "../src/lib/tmdb";
 
 describe("imageUrl", () => {
@@ -163,5 +164,29 @@ describe("fetchRecommandations", () => {
       throw new Error("down");
     }) as any;
     expect(await fetchRecommandations(42, boom)).toEqual([]);
+  });
+});
+
+describe("fetchCast", () => {
+  it("garde le top 10 avec premier rôle", async () => {
+    process.env.TMDB_READ_TOKEN = "test-token";
+    const cast = Array.from({ length: 15 }, (_, i) => ({
+      id: i + 1,
+      name: `Acteur ${i + 1}`,
+      profile_path: i === 0 ? "/a.jpg" : null,
+      roles: [{ character: `Rôle ${i + 1}` }],
+    }));
+    const fetchImpl = (async () => ({ ok: true, status: 200, json: async () => ({ cast }) })) as any;
+    const r = (await fetchCast(42, fetchImpl))!;
+    expect(r.length).toBe(10);
+    expect(r[0]).toEqual({ tmdbId: 1, nom: "Acteur 1", personnage: "Rôle 1", profile_path: "/a.jpg" });
+  });
+
+  it("retourne null sur erreur", async () => {
+    process.env.TMDB_READ_TOKEN = "test-token";
+    const boom = (async () => {
+      throw new Error("down");
+    }) as any;
+    expect(await fetchCast(42, boom)).toBeNull();
   });
 });

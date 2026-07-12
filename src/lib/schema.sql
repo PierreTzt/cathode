@@ -67,3 +67,21 @@ CREATE TABLE IF NOT EXISTS app_meta (
   cle TEXT PRIMARY KEY,
   valeur TEXT
 );
+
+-- Abonnements Web Push (un par appareil/navigateur).
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  endpoint TEXT NOT NULL UNIQUE,
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+  cree_le TEXT
+);
+
+-- Épisodes déjà notifiés (anti-doublon push).
+CREATE TABLE IF NOT EXISTS notifications_envoyees (
+  serie_id INTEGER NOT NULL,
+  saison INTEGER NOT NULL,
+  episode INTEGER NOT NULL,
+  envoye_le TEXT,
+  UNIQUE (serie_id, saison, episode)
+);

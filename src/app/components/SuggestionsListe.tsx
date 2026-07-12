@@ -48,7 +48,7 @@ function SuggestionCarte({ s }: { s: Suggestion }) {
       )}
       <div className="sugg-info">
         <div className="sugg-nom">{s.nom}</div>
-        <div className="sugg-raison muted">{s.raison}</div>
+        {s.raison && <div className="sugg-raison muted">{s.raison}</div>}
         {ajout ? (
           <Link className="sugg-ok" href={`/series/${ajout.id}`}>
             {ajout.existait ? "Déjà suivie ›" : "Ajoutée ✓ ›"}

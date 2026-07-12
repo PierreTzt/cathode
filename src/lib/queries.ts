@@ -1,7 +1,17 @@
 import { transaction, type DB } from "./db";
-import type { Provider } from "./tmdb";
+import type { Provider, CastMembre, RecommandationSerie } from "./tmdb";
 
 export { etatSuivi, type EtatSuivi } from "./etat";
+
+function parseJsonArray<T>(json: string | null): T[] {
+  if (!json) return [];
+  try {
+    const v = JSON.parse(json);
+    return Array.isArray(v) ? (v as T[]) : [];
+  } catch {
+    return [];
+  }
+}
 
 export interface SerieListe {
   id: number;
@@ -13,6 +23,7 @@ export interface SerieListe {
   diffuses: number;
   favori: number;
   statut_tmdb: string | null;
+  suivi_statut: string;
   en_retard: number;
   dernier_vu: string | null;
 }
@@ -21,6 +32,7 @@ export function listeSeries(db: DB): SerieListe[] {
   const rows = db
     .prepare(
       `SELECT s.id, s.nom, s.actif, s.archive, s.poster_path, s.favori, s.statut_tmdb,
+              COALESCE(s.suivi_statut,'actif') AS suivi_statut,
               COUNT(ev.id) AS nb_episodes,
               (SELECT COUNT(*) FROM episodes_catalogue c
                  WHERE c.serie_id = s.id AND c.saison >= 1
@@ -50,28 +62,45 @@ export interface DetailSerie {
   note: number | null;
   favori: number;
   statut_tmdb: string | null;
+  suivi_statut: string;
   providers: Provider[];
+  cast: CastMembre[];
+  recommandations: RecommandationSerie[];
 }
 
 export function detailSerie(db: DB, id: number): DetailSerie | undefined {
   const row = db
     .prepare(
-      "SELECT nom, poster_path, backdrop_path, note, favori, statut_tmdb, providers FROM series WHERE id = ?"
+      `SELECT nom, poster_path, backdrop_path, note, favori, statut_tmdb, suivi_statut,
+              providers, casting, recommandations FROM series WHERE id = ?`
     )
-    .get(id) as unknown as (Omit<DetailSerie, "providers"> & { providers: string | null }) | undefined;
+    .get(id) as unknown as
+    | {
+        nom: string;
+        poster_path: string | null;
+        backdrop_path: string | null;
+        note: number | null;
+        favori: number;
+        statut_tmdb: string | null;
+        suivi_statut: string | null;
+        providers: string | null;
+        casting: string | null;
+        recommandations: string | null;
+      }
+    | undefined;
   if (!row) return undefined;
-  const { providers, ...reste } = row;
-  return { ...reste, providers: parseProviders(providers) };
-}
-
-function parseProviders(json: string | null): Provider[] {
-  if (!json) return [];
-  try {
-    const v = JSON.parse(json);
-    return Array.isArray(v) ? v : [];
-  } catch {
-    return [];
-  }
+  return {
+    nom: row.nom,
+    poster_path: row.poster_path,
+    backdrop_path: row.backdrop_path,
+    note: row.note,
+    favori: row.favori,
+    statut_tmdb: row.statut_tmdb,
+    suivi_statut: row.suivi_statut ?? "actif",
+    providers: parseJsonArray<Provider>(row.providers),
+    cast: parseJsonArray<CastMembre>(row.casting),
+    recommandations: parseJsonArray<RecommandationSerie>(row.recommandations),
+  };
 }
 
 // Enregistre les plateformes de streaming d'une série (rafraîchies à la resync / ajout).
@@ -80,6 +109,54 @@ export function majProviders(db: DB, serieId: number, providers: Provider[]): vo
     JSON.stringify(providers),
     serieId
   );
+}
+
+export function majCast(db: DB, serieId: number, cast: CastMembre[]): void {
+  db.prepare("UPDATE series SET casting = ? WHERE id = ?").run(JSON.stringify(cast), serieId);
+}
+
+export function majRecommandations(db: DB, serieId: number, recos: RecommandationSerie[]): void {
+  db.prepare("UPDATE series SET recommandations = ? WHERE id = ?").run(
+    JSON.stringify(recos),
+    serieId
+  );
+}
+
+export type SuiviStatut = "actif" | "pause" | "abandonne";
+
+export function definirStatutSuivi(db: DB, serieId: number, statut: SuiviStatut): void {
+  db.prepare("UPDATE series SET suivi_statut = ? WHERE id = ?").run(statut, serieId);
+}
+
+export interface SerieAvecActeur {
+  id: number;
+  nom: string;
+  poster_path: string | null;
+  personnage: string | null;
+}
+
+// Séries de la bibliothèque où figure un acteur (recherche dans le JSON cast).
+export function seriesAvecActeur(
+  db: DB,
+  tmdbId: number
+): { acteur: string | null; series: SerieAvecActeur[] } {
+  const rows = db
+    .prepare(
+      "SELECT id, nom, poster_path, casting FROM series WHERE casting IS NOT NULL AND casting <> ''"
+    )
+    .all() as unknown as { id: number; nom: string; poster_path: string | null; casting: string }[];
+  let acteur: string | null = null;
+  const series: SerieAvecActeur[] = [];
+  for (const r of rows) {
+    const membres = parseJsonArray<CastMembre>(r.casting);
+    const m = membres.find((x) => x.tmdbId === tmdbId);
+    if (m) {
+      acteur = acteur ?? m.nom;
+      series.push({ id: r.id, nom: r.nom, poster_path: r.poster_path, personnage: m.personnage });
+    }
+  }
+  series.sort((a, b) => a.nom.localeCompare(b.nom, "fr"));
+  return { acteur, series };
 }
 
 export function noterSerie(db: DB, id: number, note: number | null): void {
@@ -269,13 +346,14 @@ export function tableauASuivre(db: DB, tri: TriASuivre = "prochain"): LigneASuiv
               (SELECT MAX(v.vu_le) FROM episodes_vus v WHERE v.serie_id = r.serie_id) AS dernier_vu
          FROM retard r JOIN series s ON s.id = r.serie_id
         WHERE r.rn = 1
+          AND COALESCE(s.suivi_statut,'actif') = 'actif'
         ORDER BY ${ordre}`
     )
     .all() as unknown as (Omit<LigneASuivre, "providers"> & { providers: string | null })[];
   // node:sqlite : aplatir pour la sérialisation RSC → composant client.
   return rows.map((r) => {
     const { providers, ...reste } = r;
-    return { ...reste, providers: parseProviders(providers) };
+    return { ...reste, providers: parseJsonArray<Provider>(providers) };
   });
 }
 
@@ -374,6 +452,7 @@ export function aVenir(db: DB, joursMax = 90): EpisodeAVenir[] {
           AND c.date_diffusion IS NOT NULL
           AND c.date_diffusion > date('now')
           AND c.date_diffusion <= date('now', '+' || ? || ' days')
+          AND COALESCE(s.suivi_statut,'actif') = 'actif'
           AND EXISTS (SELECT 1 FROM episodes_vus v WHERE v.serie_id = s.id)
         ORDER BY c.date_diffusion ASC, s.nom ASC`
     )
@@ -654,8 +733,11 @@ export interface Nouveautes {
 export function nouveautes(db: DB): Nouveautes {
   const retard = db
     .prepare(
-      `SELECT COUNT(*) AS eps, COUNT(DISTINCT serie_id) AS series
-         FROM episodes_catalogue c WHERE ${RETARD_WHERE}`
+      `SELECT COUNT(*) AS eps, COUNT(DISTINCT c.serie_id) AS series
+         FROM episodes_catalogue c
+         JOIN series s ON s.id = c.serie_id
+        WHERE ${RETARD_WHERE}
+          AND COALESCE(s.suivi_statut,'actif') = 'actif'`
     )
     .get() as unknown as { eps: number; series: number };
   const sortiesSemaine = (
@@ -667,6 +749,7 @@ export function nouveautes(db: DB): Nouveautes {
             AND c.date_diffusion IS NOT NULL
             AND c.date_diffusion > date('now')
             AND c.date_diffusion <= date('now', '+7 days')
+            AND COALESCE(s.suivi_statut,'actif') = 'actif'
             AND EXISTS (SELECT 1 FROM episodes_vus v WHERE v.serie_id = s.id)`
       )
       .get() as unknown as { n: number }
@@ -692,6 +775,146 @@ export function appMetaSet(db: DB, cle: string, valeur: string): void {
     `INSERT INTO app_meta (cle, valeur) VALUES (?, ?)
      ON CONFLICT (cle) DO UPDATE SET valeur = excluded.valeur`
   ).run(cle, valeur);
+}
+
+// --- Activité par jour (heatmap #9) ---------------------------------------
+
+export interface JourActivite {
+  jour: string;
+  nb: number;
+}
+
+export function activiteParJour(db: DB, jours = 371): JourActivite[] {
+  const rows = db
+    .prepare(
+      `SELECT substr(vu_le,1,10) AS jour, COUNT(*) AS nb
+         FROM episodes_vus
+        WHERE vu_le IS NOT NULL AND vu_le <> ''
+          AND substr(vu_le,1,10) >= date('now', '-' || ? || ' days')
+        GROUP BY jour`
+    )
+    .all(jours) as unknown as JourActivite[];
+  return rows.map((r) => ({ ...r }));
+}
+
+// --- Recherche globale (#8) ------------------------------------------------
+
+export interface ResultatLocalSerie {
+  id: number;
+  nom: string;
+  poster_path: string | null;
+}
+export interface ResultatLocalEpisode {
+  serie_id: number;
+  nom: string;
+  saison: number;
+  episode: number;
+  titre: string | null;
+}
+
+export function rechercheLocale(
+  db: DB,
+  q: string
+): { series: ResultatLocalSerie[]; episodes: ResultatLocalEpisode[] } {
+  const t = q.trim();
+  if (!t) return { series: [], episodes: [] };
+  const needle = `%${t}%`;
+  const series = (
+    db
+      .prepare(
+        `SELECT id, nom, poster_path FROM series
+          WHERE nom LIKE ? COLLATE NOCASE ORDER BY nom ASC LIMIT 24`
+      )
+      .all(needle) as unknown as ResultatLocalSerie[]
+  ).map((r) => ({ ...r }));
+  const episodes = (
+    db
+      .prepare(
+        `SELECT c.serie_id, s.nom, c.saison, c.episode, c.titre
+           FROM episodes_catalogue c JOIN series s ON s.id = c.serie_id
+          WHERE c.titre LIKE ? COLLATE NOCASE
+          ORDER BY s.nom ASC, c.saison ASC, c.episode ASC LIMIT 30`
+      )
+      .all(needle) as unknown as ResultatLocalEpisode[]
+  ).map((r) => ({ ...r }));
+  return { series, episodes };
+}
+
+// --- Abonnements Web Push (#2) ---------------------------------------------
+
+export interface PushSub {
+  id: number;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+}
+
+export function ajouterPushSub(
+  db: DB,
+  sub: { endpoint: string; p256dh: string; auth: string }
+): void {
+  db.prepare(
+    `INSERT INTO push_subscriptions (endpoint, p256dh, auth, cree_le)
+     VALUES (?, ?, ?, datetime('now'))
+     ON CONFLICT (endpoint) DO UPDATE SET p256dh = excluded.p256dh, auth = excluded.auth`
+  ).run(sub.endpoint, sub.p256dh, sub.auth);
+}
+
+export function listePushSubs(db: DB): PushSub[] {
+  return (
+    db
+      .prepare("SELECT id, endpoint, p256dh, auth FROM push_subscriptions")
+      .all() as unknown as PushSub[]
+  ).map((r) => ({ ...r }));
+}
+
+export function supprimerPushSub(db: DB, endpoint: string): void {
+  db.prepare("DELETE FROM push_subscriptions WHERE endpoint = ?").run(endpoint);
+}
+
+export function compterPushSubs(db: DB): number {
+  return (
+    db.prepare("SELECT COUNT(*) AS n FROM push_subscriptions").get() as unknown as { n: number }
+  ).n;
+}
+
+// --- Épisodes à notifier (#2) ----------------------------------------------
+
+export interface EpisodeANotifier {
+  serie_id: number;
+  nom: string;
+  saison: number;
+  episode: number;
+  titre: string | null;
+}
+
+// Épisodes récemment diffusés (fenêtre `joursRecents`), séries actives suivies
+// (≥1 vu), non encore notifiés. Fenêtre = ne pas notifier tout l'arriéré.
+export function episodesANotifier(db: DB, joursRecents = 8): EpisodeANotifier[] {
+  const rows = db
+    .prepare(
+      `SELECT c.serie_id, s.nom, c.saison, c.episode, c.titre
+         FROM episodes_catalogue c JOIN series s ON s.id = c.serie_id
+        WHERE c.saison >= 1
+          AND c.date_diffusion IS NOT NULL
+          AND c.date_diffusion <= date('now')
+          AND c.date_diffusion >= date('now', '-' || ? || ' days')
+          AND COALESCE(s.suivi_statut,'actif') = 'actif'
+          AND EXISTS (SELECT 1 FROM episodes_vus v WHERE v.serie_id = s.id)
+          AND NOT EXISTS (
+            SELECT 1 FROM notifications_envoyees n
+             WHERE n.serie_id = c.serie_id AND n.saison = c.saison AND n.episode = c.episode)
+        ORDER BY c.date_diffusion DESC, s.nom ASC`
+    )
+    .all(joursRecents) as unknown as EpisodeANotifier[];
+  return rows.map((r) => ({ ...r }));
+}
+
+export function marquerNotifie(db: DB, serieId: number, saison: number, episode: number): void {
+  db.prepare(
+    `INSERT OR IGNORE INTO notifications_envoyees (serie_id, saison, episode, envoye_le)
+     VALUES (?, ?, ?, datetime('now'))`
+  ).run(serieId, saison, episode);
 }
 
 // Avancement d'une série (hors spéciaux) + temps de rattrapage des épisodes diffusés non vus.

@@ -10,10 +10,16 @@ import {
   noterEpisode,
   basculerFavori,
   ajouterSerie,
+  definirStatutSuivi,
+  ajouterPushSub,
+  supprimerPushSub,
+  type SuiviStatut,
 } from "@/lib/queries";
 import { rechercheSeries, type ResultatRechercheSerie } from "@/lib/tmdb";
 import { majCatalogue } from "@/import/catalogue";
 import { majProvidersToutes } from "@/import/providers";
+import { majCastToutes } from "@/import/cast";
+import { majRecommandationsToutes } from "@/import/recommandationsSeries";
 import { resync, type ResumeResync } from "@/import/resync";
 import { revalidatePath } from "next/cache";
 
@@ -73,6 +79,30 @@ export async function actionNoterEpisode(
   revalidatePath("/stats");
 }
 
+export async function actionStatutSuivi(serieId: number, statut: SuiviStatut): Promise<void> {
+  definirStatutSuivi(getDb(), serieId, statut);
+  revalidatePath(`/series/${serieId}`);
+  revalidatePath("/");
+  revalidatePath("/mes-series");
+}
+
+export async function actionAbonnerPush(sub: {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+}): Promise<void> {
+  ajouterPushSub(getDb(), sub);
+}
+
+export async function actionDesabonnerPush(endpoint: string): Promise<void> {
+  supprimerPushSub(getDb(), endpoint);
+}
+
+// Clé VAPID publique lue au runtime (évite un rebuild pour changer les clés).
+export async function actionClePush(): Promise<string | null> {
+  return process.env.VAPID_PUBLIC_KEY || null;
+}
+
 // Resync manuelle (bouton du hub « Plus ») : catalogue + plateformes + suggestions.
 export async function actionResync(): Promise<ResumeResync> {
   const r = await resync(getDb());
@@ -106,6 +136,8 @@ export async function actionAjouterSerie(s: ResultatRecherche): Promise<{ id: nu
   if (!existait) {
     await majCatalogue(db, undefined, { serieId: id });
     await majProvidersToutes(db, undefined, { serieId: id });
+    await majCastToutes(db, undefined, { serieId: id });
+    await majRecommandationsToutes(db, undefined, { serieId: id });
   }
   revalidatePath("/mes-series");
   revalidatePath("/");

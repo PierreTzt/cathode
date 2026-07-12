@@ -231,6 +231,45 @@ export async function fetchRecommandations(
   }
 }
 
+export interface CastMembre {
+  tmdbId: number;
+  nom: string;
+  personnage: string | null;
+  profile_path: string | null;
+}
+
+// Casting principal (top 10) d'une série via aggregate_credits.
+export async function fetchCast(
+  tmdbId: number,
+  fetchImpl: typeof fetch = fetch
+): Promise<CastMembre[] | null> {
+  const token = process.env.TMDB_READ_TOKEN;
+  if (!token) return null;
+  try {
+    const res = await fetchImpl(
+      `https://api.themoviedb.org/3/tv/${tmdbId}/aggregate_credits?language=fr-FR`,
+      { headers: { Authorization: `Bearer ${token}`, accept: "application/json" } }
+    );
+    if (!res.ok) return null;
+    const json = (await res.json()) as {
+      cast?: Array<{
+        id: number;
+        name?: string;
+        profile_path?: string | null;
+        roles?: Array<{ character?: string }>;
+      }>;
+    };
+    return (json.cast ?? []).slice(0, 10).map((c) => ({
+      tmdbId: c.id,
+      nom: c.name ?? "",
+      personnage: c.roles?.[0]?.character || null,
+      profile_path: c.profile_path ?? null,
+    }));
+  } catch {
+    return null;
+  }
+}
+
 export async function findByTvdbId(
   tvdbId: string,
   fetchImpl: typeof fetch = fetch
