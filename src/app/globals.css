@@ -451,12 +451,11 @@ a.journal-lien:hover { border-color: var(--gold); }
 .statut-suivi-btn.actif { background: var(--gold); color: var(--gold-ink); }
 .statut-suivi-btn:disabled { opacity: .6; cursor: default; }
 
-/* Filtre plateforme « ce soir » (À suivre) */
-.prov-filtre { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
-.prov-puce { background: var(--panel); border: 1px solid var(--border); color: var(--muted);
-  border-radius: 999px; padding: 6px 13px; font-size: .82rem; font-weight: 600; cursor: pointer; }
-.prov-puce:hover { color: var(--text); border-color: var(--gold); }
-.prov-puce.actif { background: var(--gold); color: var(--gold-ink); border-color: var(--gold); }
+/* Filtre plateforme « ce soir » (À suivre) — liste déroulante */
+.prov-filtre { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 16px; font-size: .85rem; }
+.prov-select { background: var(--panel); border: 1px solid var(--border); color: var(--text);
+  border-radius: 10px; padding: 9px 12px; font-size: .9rem; font-weight: 600; cursor: pointer; }
+.prov-select:hover { border-color: var(--gold); }
 
 /* Casting */
 .cast-row { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; }

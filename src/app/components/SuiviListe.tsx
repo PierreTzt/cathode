@@ -18,20 +18,22 @@ export function SuiviListe({ lignes }: { lignes: LigneASuivre[] }) {
   return (
     <>
       {plateformes.length > 1 && (
-        <div className="prov-filtre" role="group" aria-label="Filtrer par plateforme">
-          <button className={`prov-puce${!prov ? " actif" : ""}`} onClick={() => setProv(null)}>
-            Toutes
-          </button>
-          {plateformes.map((p) => (
-            <button
-              key={p}
-              className={`prov-puce${prov === p ? " actif" : ""}`}
-              onClick={() => setProv((cur) => (cur === p ? null : p))}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
+        <label className="prov-filtre">
+          <span className="muted">Où regarder</span>
+          <select
+            className="prov-select"
+            value={prov ?? ""}
+            onChange={(e) => setProv(e.target.value || null)}
+            aria-label="Filtrer par plateforme"
+          >
+            <option value="">Toutes les plateformes</option>
+            {plateformes.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+        </label>
       )}
       {filtres.length === 0 ? (
         <p className="muted">Rien à regarder sur {prov} pour l&apos;instant.</p>
