@@ -1,15 +1,23 @@
+import Link from "next/link";
 import { getDb } from "@/lib/db";
-import { stats } from "@/lib/queries";
+import { stats, meilleursEpisodes } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
 export default function StatsPage() {
-  const s = stats(getDb());
+  const db = getDb();
+  const s = stats(db);
+  const tops = meilleursEpisodes(db, 10);
   const jours = Math.floor(s.totalMinutes / 60 / 24);
   const heures = Math.floor((s.totalMinutes / 60) % 24);
   return (
     <div>
       <h1>Statistiques</h1>
+      <p>
+        <Link href="/bilan" className="lien-bilan">
+          → Voir mon bilan annuel
+        </Link>
+      </p>
       <div className="stat-cards">
         <div className="stat-card">
           <div className="n">{jours} j {heures} h</div>
@@ -39,6 +47,27 @@ export default function StatsPage() {
           ))}
         </tbody>
       </table>
+
+      {tops.length > 0 && (
+        <>
+          <h2>Meilleurs épisodes</h2>
+          <table>
+            <thead><tr><th>Série</th><th>Épisode</th><th>Note</th></tr></thead>
+            <tbody>
+              {tops.map((t) => (
+                <tr key={`${t.nom}-${t.saison}-${t.episode}`}>
+                  <td>{t.nom}</td>
+                  <td className="muted">
+                    S{String(t.saison).padStart(2, "0")}E{String(t.episode).padStart(2, "0")}
+                    {t.titre ? ` · ${t.titre}` : ""}
+                  </td>
+                  <td>{"★".repeat(t.note)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
 
       <h2>Activité par année</h2>
       <table>

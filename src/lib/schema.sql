@@ -49,3 +49,21 @@ CREATE TABLE IF NOT EXISTS a_voir (
   titre TEXT NOT NULL UNIQUE,
   ajoute_le TEXT
 );
+
+-- Note 1–5 par épisode (indépendante de la note globale de série).
+CREATE TABLE IF NOT EXISTS notes_episodes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  serie_id INTEGER NOT NULL REFERENCES series(id),
+  saison INTEGER NOT NULL,
+  episode INTEGER NOT NULL,
+  note INTEGER NOT NULL,
+  UNIQUE (serie_id, saison, episode)
+);
+
+CREATE INDEX IF NOT EXISTS idx_note_ep_serie ON notes_episodes (serie_id);
+
+-- Métadonnées applicatives (clé/valeur) : horodatage de la dernière resync, etc.
+CREATE TABLE IF NOT EXISTS app_meta (
+  cle TEXT PRIMARY KEY,
+  valeur TEXT
+);

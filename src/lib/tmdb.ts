@@ -2,7 +2,7 @@ const IMG_BASE = "https://image.tmdb.org/t/p";
 
 export function imageUrl(
   path: string | null | undefined,
-  size: "w185" | "w300" | "w342" | "w780"
+  size: "w45" | "w92" | "w185" | "w300" | "w342" | "w780"
 ): string | null {
   if (!path) return null;
   return `${IMG_BASE}/${size}${path}`;
@@ -142,6 +142,84 @@ export async function rechercheSeries(
       }>;
     };
     return (json.results ?? []).slice(0, 12).map((r) => ({
+      tmdbId: r.id,
+      nom: r.name || r.original_name || "Sans titre",
+      annee: r.first_air_date ? r.first_air_date.slice(0, 4) : null,
+      poster_path: r.poster_path ?? null,
+      backdrop_path: r.backdrop_path ?? null,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export interface Provider {
+  nom: string;
+  logo_path: string | null;
+}
+
+// Plateformes de streaming (offres par abonnement, région FR) où regarder la série.
+// Retourne [] si aucune, null en cas d'erreur (pour ne pas écraser un cache valide).
+export async function fetchProviders(
+  tmdbId: number,
+  fetchImpl: typeof fetch = fetch
+): Promise<Provider[] | null> {
+  const token = process.env.TMDB_READ_TOKEN;
+  if (!token) return null;
+  try {
+    const res = await fetchImpl(
+      `https://api.themoviedb.org/3/tv/${tmdbId}/watch/providers`,
+      { headers: { Authorization: `Bearer ${token}`, accept: "application/json" } }
+    );
+    if (!res.ok) return null;
+    const json = (await res.json()) as {
+      results?: {
+        FR?: {
+          flatrate?: Array<{ provider_name?: string; logo_path?: string | null }>;
+        };
+      };
+    };
+    const flatrate = json.results?.FR?.flatrate ?? [];
+    return flatrate
+      .map((p) => ({ nom: p.provider_name ?? "", logo_path: p.logo_path ?? null }))
+      .filter((p) => p.nom !== "");
+  } catch {
+    return null;
+  }
+}
+
+export interface RecommandationSerie {
+  tmdbId: number;
+  nom: string;
+  annee: string | null;
+  poster_path: string | null;
+  backdrop_path: string | null;
+}
+
+// Séries recommandées par TMDB à partir d'une série donnée (pour « à commencer »).
+export async function fetchRecommandations(
+  tmdbId: number,
+  fetchImpl: typeof fetch = fetch
+): Promise<RecommandationSerie[]> {
+  const token = process.env.TMDB_READ_TOKEN;
+  if (!token) return [];
+  try {
+    const res = await fetchImpl(
+      `https://api.themoviedb.org/3/tv/${tmdbId}/recommendations?language=fr-FR&page=1`,
+      { headers: { Authorization: `Bearer ${token}`, accept: "application/json" } }
+    );
+    if (!res.ok) return [];
+    const json = (await res.json()) as {
+      results?: Array<{
+        id: number;
+        name?: string;
+        original_name?: string;
+        first_air_date?: string;
+        poster_path?: string | null;
+        backdrop_path?: string | null;
+      }>;
+    };
+    return (json.results ?? []).map((r) => ({
       tmdbId: r.id,
       nom: r.name || r.original_name || "Sans titre",
       annee: r.first_air_date ? r.first_air_date.slice(0, 4) : null,

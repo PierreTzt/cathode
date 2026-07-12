@@ -7,11 +7,14 @@ import {
   ajouterAVoir,
   retirerAVoir,
   noterSerie,
+  noterEpisode,
   basculerFavori,
   ajouterSerie,
 } from "@/lib/queries";
 import { rechercheSeries, type ResultatRechercheSerie } from "@/lib/tmdb";
 import { majCatalogue } from "@/import/catalogue";
+import { majProvidersToutes } from "@/import/providers";
+import { resync, type ResumeResync } from "@/import/resync";
 import { revalidatePath } from "next/cache";
 
 export type ResultatRecherche = ResultatRechercheSerie;
@@ -59,6 +62,27 @@ export async function actionNoter(serieId: number, note: number | null): Promise
   revalidatePath(`/series/${serieId}`);
 }
 
+export async function actionNoterEpisode(
+  serieId: number,
+  saison: number,
+  episode: number,
+  note: number | null
+): Promise<void> {
+  noterEpisode(getDb(), serieId, saison, episode, note);
+  revalidatePath(`/series/${serieId}`);
+  revalidatePath("/stats");
+}
+
+// Resync manuelle (bouton du hub « Plus ») : catalogue + plateformes + suggestions.
+export async function actionResync(): Promise<ResumeResync> {
+  const r = await resync(getDb());
+  revalidatePath("/");
+  revalidatePath("/a-venir");
+  revalidatePath("/mes-series");
+  revalidatePath("/plus");
+  return r;
+}
+
 export async function actionFavori(serieId: number): Promise<void> {
   basculerFavori(getDb(), serieId);
   revalidatePath(`/series/${serieId}`);
@@ -81,6 +105,7 @@ export async function actionAjouterSerie(s: ResultatRecherche): Promise<{ id: nu
   });
   if (!existait) {
     await majCatalogue(db, undefined, { serieId: id });
+    await majProvidersToutes(db, undefined, { serieId: id });
   }
   revalidatePath("/mes-series");
   revalidatePath("/");

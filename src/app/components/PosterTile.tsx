@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { imageUrl } from "@/lib/tmdb";
+import { StatutBadge } from "./StatutBadge";
+import type { EtatSuivi } from "@/lib/etat";
 
 export interface PosterTileProps {
   id: number;
@@ -8,9 +10,20 @@ export interface PosterTileProps {
   nb_episodes: number;
   diffuses: number;
   favori: number;
+  etat?: EtatSuivi;
+  enRetard?: number;
 }
 
-export function PosterTile({ id, nom, poster_path, nb_episodes, diffuses, favori }: PosterTileProps) {
+export function PosterTile({
+  id,
+  nom,
+  poster_path,
+  nb_episodes,
+  diffuses,
+  favori,
+  etat,
+  enRetard = 0,
+}: PosterTileProps) {
   const src = imageUrl(poster_path, "w342");
   const pct = diffuses > 0 ? Math.min(100, Math.round((nb_episodes / diffuses) * 100)) : null;
   return (
@@ -26,6 +39,11 @@ export function PosterTile({ id, nom, poster_path, nb_episodes, diffuses, favori
         )}
       </div>
       <div className="poster-name">{nom}</div>
+      {etat && (
+        <div className="poster-statut">
+          <StatutBadge etat={etat} enRetard={enRetard} />
+        </div>
+      )}
     </Link>
   );
 }

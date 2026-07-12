@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { imageUrl, findByTvdbId, fetchSeriesEpisodes } from "../src/lib/tmdb";
+import {
+  imageUrl,
+  findByTvdbId,
+  fetchSeriesEpisodes,
+  fetchProviders,
+  fetchRecommandations,
+} from "../src/lib/tmdb";
 
 describe("imageUrl", () => {
   it("construit l'URL ou renvoie null", () => {
@@ -95,5 +101,67 @@ describe("fetchSeriesEpisodes", () => {
       throw new Error("down");
     }) as any;
     expect(await fetchSeriesEpisodes(42, boom)).toBeNull();
+  });
+});
+
+describe("fetchProviders", () => {
+  it("extrait les plateformes par abonnement FR", async () => {
+    process.env.TMDB_READ_TOKEN = "test-token";
+    const fetchImpl = (async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        results: {
+          FR: {
+            flatrate: [
+              { provider_name: "Netflix", logo_path: "/nf.jpg" },
+              { provider_name: "Disney Plus", logo_path: "/dp.jpg" },
+            ],
+          },
+          US: { flatrate: [{ provider_name: "Hulu", logo_path: "/h.jpg" }] },
+        },
+      }),
+    })) as any;
+    expect(await fetchProviders(42, fetchImpl)).toEqual([
+      { nom: "Netflix", logo_path: "/nf.jpg" },
+      { nom: "Disney Plus", logo_path: "/dp.jpg" },
+    ]);
+  });
+
+  it("retourne [] si pas d'offre FR, null sur erreur", async () => {
+    process.env.TMDB_READ_TOKEN = "test-token";
+    const vide = (async () => ({ ok: true, status: 200, json: async () => ({ results: {} }) })) as any;
+    expect(await fetchProviders(42, vide)).toEqual([]);
+    const boom = (async () => {
+      throw new Error("down");
+    }) as any;
+    expect(await fetchProviders(42, boom)).toBeNull();
+  });
+});
+
+describe("fetchRecommandations", () => {
+  it("mappe les séries recommandées", async () => {
+    process.env.TMDB_READ_TOKEN = "test-token";
+    const fetchImpl = (async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        results: [
+          { id: 7, name: "The Wire", first_air_date: "2002-06-02", poster_path: "/w.jpg", backdrop_path: "/wb.jpg" },
+          { id: 8, original_name: "Fringe" },
+        ],
+      }),
+    })) as any;
+    const r = await fetchRecommandations(42, fetchImpl);
+    expect(r[0]).toEqual({ tmdbId: 7, nom: "The Wire", annee: "2002", poster_path: "/w.jpg", backdrop_path: "/wb.jpg" });
+    expect(r[1]).toMatchObject({ tmdbId: 8, nom: "Fringe", annee: null });
+  });
+
+  it("retourne [] sur erreur réseau", async () => {
+    process.env.TMDB_READ_TOKEN = "test-token";
+    const boom = (async () => {
+      throw new Error("down");
+    }) as any;
+    expect(await fetchRecommandations(42, boom)).toEqual([]);
   });
 });

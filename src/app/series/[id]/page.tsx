@@ -3,10 +3,14 @@ import {
   detailSerie,
   episodesDeSerie,
   episodesCompletsDeSerie,
+  notesEpisodesDeSerie,
   progressionSerie,
+  etatSuivi,
 } from "@/lib/queries";
 import { EpisodesTracker } from "@/app/components/EpisodesTracker";
 import { NoteFavori } from "@/app/components/NoteFavori";
+import { StatutBadge } from "@/app/components/StatutBadge";
+import { Providers } from "@/app/components/Providers";
 import { imageUrl } from "@/lib/tmdb";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -28,9 +32,14 @@ export default async function SeriePage({ params }: { params: Promise<{ id: stri
   if (!serie) notFound();
   const prog = progressionSerie(db, serieId);
   const eps = episodesCompletsDeSerie(db, serieId);
+  const notes = notesEpisodesDeSerie(db, serieId);
   const bg = imageUrl(serie.backdrop_path, "w780");
   const poster = imageUrl(serie.poster_path, "w185");
   const pct = prog.diffuses > 0 ? Math.round((prog.vus / prog.diffuses) * 100) : 0;
+  const enRetard = Math.max(0, prog.diffuses - prog.vus);
+  const etat = etatSuivi({ nbVus: prog.vus, enRetard, statutTmdb: serie.statut_tmdb });
+  const moyenneGlobale =
+    notes.length > 0 ? notes.reduce((a, n) => a + n.note, 0) / notes.length : null;
 
   return (
     <div>
@@ -45,10 +54,19 @@ export default async function SeriePage({ params }: { params: Promise<{ id: stri
           {poster && <img className="serie-hero-poster" src={poster} alt={serie.nom} />}
           <div>
             <h1 style={{ margin: 0 }}>{serie.nom}</h1>
+            <div className="serie-hero-meta">
+              <StatutBadge etat={etat} enRetard={enRetard} />
+              {moyenneGlobale !== null && (
+                <span className="serie-moy" title="Moyenne de tes notes d'épisodes">
+                  ★ {moyenneGlobale.toFixed(1)}
+                </span>
+              )}
+            </div>
             <p className="muted" style={{ margin: "6px 0 0" }}>
               {prog.vus}/{prog.diffuses} épisodes vus
               {prog.total > prog.diffuses ? ` · ${prog.total} au total` : ""}
             </p>
+            <Providers providers={serie.providers} />
             <NoteFavori serieId={serieId} note={serie.note} favori={serie.favori} />
           </div>
         </div>
@@ -71,7 +89,7 @@ export default async function SeriePage({ params }: { params: Promise<{ id: stri
       )}
 
       {eps.length > 0 ? (
-        <EpisodesTracker serieId={serieId} episodes={eps} />
+        <EpisodesTracker serieId={serieId} episodes={eps} notes={notes} />
       ) : (
         <FallbackVus serieId={serieId} />
       )}

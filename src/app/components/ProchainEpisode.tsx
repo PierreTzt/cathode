@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { LigneASuivre } from "@/lib/queries";
 import { actionMarquerVu, actionMarquerJusquA } from "@/app/actions";
 import { imageUrl } from "@/lib/tmdb";
+import { Providers } from "./Providers";
 
 // Date de diffusion → « aujourd'hui / hier / il y a 5 jours … ». La requête ne
 // remonte que des épisodes déjà diffusés, donc toujours dans le passé.
@@ -84,7 +85,10 @@ export function ProchainEpisode({ ligne }: { ligne: LigneASuivre }) {
         </div>
         {ligne.titre && <div className="suivi-titre">{ligne.titre}</div>}
         {ligne.apercu && <p className="suivi-apercu">{ligne.apercu}</p>}
-        {quand && <div className="suivi-quand">Diffusé {quand}</div>}
+        <div className="suivi-bas">
+          {quand && <span className="suivi-quand">Diffusé {quand}</span>}
+          <Providers providers={ligne.providers} compact />
+        </div>
       </div>
 
       <div className="suivi-actions">

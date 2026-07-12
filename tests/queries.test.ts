@@ -67,6 +67,8 @@ describe("détail série", () => {
       backdrop_path: "/b.jpg",
       note: null,
       favori: 0,
+      statut_tmdb: null,
+      providers: [],
     });
   });
 });

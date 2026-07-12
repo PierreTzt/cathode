@@ -1,4 +1,7 @@
 import { transaction, type DB } from "./db";
+import type { Provider } from "./tmdb";
+
+export { etatSuivi, type EtatSuivi } from "./etat";
 
 export interface SerieListe {
   id: number;
@@ -9,16 +12,25 @@ export interface SerieListe {
   poster_path: string | null;
   diffuses: number;
   favori: number;
+  statut_tmdb: string | null;
+  en_retard: number;
+  dernier_vu: string | null;
 }
 
 export function listeSeries(db: DB): SerieListe[] {
   const rows = db
     .prepare(
-      `SELECT s.id, s.nom, s.actif, s.archive, s.poster_path, s.favori,
+      `SELECT s.id, s.nom, s.actif, s.archive, s.poster_path, s.favori, s.statut_tmdb,
               COUNT(ev.id) AS nb_episodes,
               (SELECT COUNT(*) FROM episodes_catalogue c
                  WHERE c.serie_id = s.id AND c.saison >= 1
-                   AND c.date_diffusion IS NOT NULL AND c.date_diffusion <= date('now')) AS diffuses
+                   AND c.date_diffusion IS NOT NULL AND c.date_diffusion <= date('now')) AS diffuses,
+              (SELECT COUNT(*) FROM episodes_catalogue c
+                 WHERE c.serie_id = s.id AND c.saison >= 1
+                   AND c.date_diffusion IS NOT NULL AND c.date_diffusion <= date('now')
+                   AND NOT EXISTS (SELECT 1 FROM episodes_vus v
+                                    WHERE v.serie_id = c.serie_id AND v.saison = c.saison AND v.episode = c.episode)) AS en_retard,
+              (SELECT MAX(v.vu_le) FROM episodes_vus v WHERE v.serie_id = s.id) AS dernier_vu
          FROM series s
          LEFT JOIN episodes_vus ev ON ev.serie_id = s.id
         GROUP BY s.id
@@ -37,13 +49,37 @@ export interface DetailSerie {
   backdrop_path: string | null;
   note: number | null;
   favori: number;
+  statut_tmdb: string | null;
+  providers: Provider[];
 }
 
 export function detailSerie(db: DB, id: number): DetailSerie | undefined {
   const row = db
-    .prepare("SELECT nom, poster_path, backdrop_path, note, favori FROM series WHERE id = ?")
-    .get(id) as unknown as DetailSerie | undefined;
-  return row ? { ...row } : undefined;
+    .prepare(
+      "SELECT nom, poster_path, backdrop_path, note, favori, statut_tmdb, providers FROM series WHERE id = ?"
+    )
+    .get(id) as unknown as (Omit<DetailSerie, "providers"> & { providers: string | null }) | undefined;
+  if (!row) return undefined;
+  const { providers, ...reste } = row;
+  return { ...reste, providers: parseProviders(providers) };
+}
+
+function parseProviders(json: string | null): Provider[] {
+  if (!json) return [];
+  try {
+    const v = JSON.parse(json);
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+}
+
+// Enregistre les plateformes de streaming d'une série (rafraîchies à la resync / ajout).
+export function majProviders(db: DB, serieId: number, providers: Provider[]): void {
+  db.prepare("UPDATE series SET providers = ? WHERE id = ?").run(
+    JSON.stringify(providers),
+    serieId
+  );
 }
 
 export function noterSerie(db: DB, id: number, note: number | null): void {
@@ -200,6 +236,7 @@ export interface LigneASuivre {
   date_diffusion: string | null;
   nb_en_retard: number;
   dernier_vu: string | null;
+  providers: Provider[];
 }
 
 export type TriASuivre = "prochain" | "dernier_vu";
@@ -227,16 +264,19 @@ export function tableauASuivre(db: DB, tri: TriASuivre = "prochain"): LigneASuiv
            FROM episodes_catalogue c
           WHERE ${RETARD_WHERE}
        )
-       SELECT r.serie_id, s.nom, s.poster_path, s.backdrop_path,
+       SELECT r.serie_id, s.nom, s.poster_path, s.backdrop_path, s.providers,
               r.saison, r.episode, r.titre, r.apercu, r.still_path, r.date_diffusion, r.nb_en_retard,
               (SELECT MAX(v.vu_le) FROM episodes_vus v WHERE v.serie_id = r.serie_id) AS dernier_vu
          FROM retard r JOIN series s ON s.id = r.serie_id
         WHERE r.rn = 1
         ORDER BY ${ordre}`
     )
-    .all() as unknown as LigneASuivre[];
+    .all() as unknown as (Omit<LigneASuivre, "providers"> & { providers: string | null })[];
   // node:sqlite : aplatir pour la sérialisation RSC → composant client.
-  return rows.map((r) => ({ ...r }));
+  return rows.map((r) => {
+    const { providers, ...reste } = r;
+    return { ...reste, providers: parseProviders(providers) };
+  });
 }
 
 // Insère un épisode comme vu, sauf s'il l'est déjà (idempotent — la clé UNIQUE
@@ -382,6 +422,276 @@ export interface Progression {
   diffuses: number;
   total: number;
   minutesRestantes: number;
+}
+
+// --- Notes par épisode (#7) ------------------------------------------------
+
+export interface NoteEpisode {
+  saison: number;
+  episode: number;
+  note: number;
+}
+
+export function noterEpisode(
+  db: DB,
+  serieId: number,
+  saison: number,
+  episode: number,
+  note: number | null
+): void {
+  if (note == null) {
+    db.prepare(
+      "DELETE FROM notes_episodes WHERE serie_id = ? AND saison = ? AND episode = ?"
+    ).run(serieId, saison, episode);
+    return;
+  }
+  db.prepare(
+    `INSERT INTO notes_episodes (serie_id, saison, episode, note) VALUES (?, ?, ?, ?)
+     ON CONFLICT (serie_id, saison, episode) DO UPDATE SET note = excluded.note`
+  ).run(serieId, saison, episode, note);
+}
+
+export function notesEpisodesDeSerie(db: DB, serieId: number): NoteEpisode[] {
+  const rows = db
+    .prepare(
+      "SELECT saison, episode, note FROM notes_episodes WHERE serie_id = ? ORDER BY saison, episode"
+    )
+    .all(serieId) as unknown as NoteEpisode[];
+  return rows.map((r) => ({ ...r }));
+}
+
+export interface MeilleurEpisode {
+  nom: string;
+  saison: number;
+  episode: number;
+  titre: string | null;
+  note: number;
+}
+
+// Épisodes les mieux notés, toutes séries confondues (bloc « Meilleurs épisodes » des stats).
+export function meilleursEpisodes(db: DB, limite = 10): MeilleurEpisode[] {
+  const rows = db
+    .prepare(
+      `SELECT s.nom, ne.saison, ne.episode, c.titre, ne.note
+         FROM notes_episodes ne
+         JOIN series s ON s.id = ne.serie_id
+         LEFT JOIN episodes_catalogue c
+           ON c.serie_id = ne.serie_id AND c.saison = ne.saison AND c.episode = ne.episode
+        ORDER BY ne.note DESC, s.nom ASC, ne.saison ASC, ne.episode ASC
+        LIMIT ?`
+    )
+    .all(limite) as unknown as MeilleurEpisode[];
+  return rows.map((r) => ({ ...r }));
+}
+
+// --- Journal (#8) ----------------------------------------------------------
+
+export interface EntreeJournal {
+  type: "episode" | "film";
+  vu_le: string;
+  serie_id: number | null;
+  nom: string;
+  poster_path: string | null;
+  saison: number | null;
+  episode: number | null;
+  titre: string | null;
+}
+
+const JOURNAL_SELECT = `
+  SELECT 'episode' AS type, ev.vu_le AS vu_le, s.id AS serie_id, s.nom AS nom,
+         s.poster_path AS poster_path, ev.saison AS saison, ev.episode AS episode, c.titre AS titre
+    FROM episodes_vus ev
+    JOIN series s ON s.id = ev.serie_id
+    LEFT JOIN episodes_catalogue c
+      ON c.serie_id = ev.serie_id AND c.saison = ev.saison AND c.episode = ev.episode
+   WHERE ev.vu_le IS NOT NULL AND ev.vu_le <> ''
+  UNION ALL
+  SELECT 'film' AS type, f.vu_le AS vu_le, NULL AS serie_id, f.nom AS nom,
+         NULL AS poster_path, NULL AS saison, NULL AS episode, NULL AS titre
+    FROM films_vus f
+   WHERE f.vu_le IS NOT NULL AND f.vu_le <> ''`;
+
+// Flux chronologique (desc) épisodes vus + films.
+export function journal(db: DB, limite = 400): EntreeJournal[] {
+  const rows = db
+    .prepare(`${JOURNAL_SELECT} ORDER BY vu_le DESC, nom ASC LIMIT ?`)
+    .all(limite) as unknown as EntreeJournal[];
+  return rows.map((r) => ({ ...r }));
+}
+
+// « Il y a un an » : entrées du même jour (mm-jj) lors des années précédentes.
+export function souvenirs(db: DB): EntreeJournal[] {
+  const rows = db
+    .prepare(
+      `SELECT * FROM (${JOURNAL_SELECT}) j
+        WHERE strftime('%m-%d', j.vu_le) = strftime('%m-%d', 'now')
+          AND strftime('%Y', j.vu_le) < strftime('%Y', 'now')
+        ORDER BY j.vu_le DESC, j.nom ASC`
+    )
+    .all() as unknown as EntreeJournal[];
+  return rows.map((r) => ({ ...r }));
+}
+
+// --- Bilan annuel (#9) -----------------------------------------------------
+
+export interface BilanAnnee {
+  annee: string;
+  totalMinutes: number;
+  nbEpisodes: number;
+  nbFilms: number;
+  nbSeries: number;
+  topSeries: { nom: string; nb: number }[];
+  genreDominant: string | null;
+  topBinge: { jour: string; nb: number } | null;
+  parMois: { mois: string; nb: number }[];
+}
+
+// Années ayant au moins une activité (épisode ou film), pour le sélecteur.
+export function anneesDisponibles(db: DB): string[] {
+  const rows = db
+    .prepare(
+      `SELECT DISTINCT annee FROM (
+         SELECT substr(vu_le,1,4) AS annee FROM episodes_vus WHERE vu_le IS NOT NULL AND vu_le <> ''
+         UNION
+         SELECT substr(vu_le,1,4) AS annee FROM films_vus WHERE vu_le IS NOT NULL AND vu_le <> ''
+       ) ORDER BY annee DESC`
+    )
+    .all() as unknown as { annee: string }[];
+  return rows.map((r) => r.annee).filter((a) => /^\d{4}$/.test(a));
+}
+
+export function statsAnnee(db: DB, annee: string): BilanAnnee {
+  const a = /^\d{4}$/.test(annee) ? annee : "0000";
+  const one = (sql: string, ...args: (string | number)[]): number =>
+    (db.prepare(sql).get(...args) as unknown as { n: number }).n ?? 0;
+
+  const totalMinutes =
+    one("SELECT COALESCE(SUM(duree_min),0) AS n FROM episodes_vus WHERE substr(vu_le,1,4)=?", a) +
+    one("SELECT COALESCE(SUM(duree_min),0) AS n FROM films_vus WHERE substr(vu_le,1,4)=?", a);
+
+  const nbEpisodes = one(
+    "SELECT COUNT(*) AS n FROM episodes_vus WHERE substr(vu_le,1,4)=?",
+    a
+  );
+  const nbFilms = one("SELECT COUNT(*) AS n FROM films_vus WHERE substr(vu_le,1,4)=?", a);
+  const nbSeries = one(
+    "SELECT COUNT(DISTINCT serie_id) AS n FROM episodes_vus WHERE substr(vu_le,1,4)=?",
+    a
+  );
+
+  const topSeries = db
+    .prepare(
+      `SELECT s.nom AS nom, COUNT(ev.id) AS nb
+         FROM series s JOIN episodes_vus ev ON ev.serie_id = s.id
+        WHERE substr(ev.vu_le,1,4) = ?
+        GROUP BY s.id ORDER BY nb DESC, s.nom ASC LIMIT 10`
+    )
+    .all(a) as unknown as { nom: string; nb: number }[];
+
+  // Genre dominant : parmi les séries vues cette année, genre le plus fréquent.
+  const genresRows = db
+    .prepare(
+      `SELECT DISTINCT s.genres AS genres
+         FROM series s JOIN episodes_vus ev ON ev.serie_id = s.id
+        WHERE substr(ev.vu_le,1,4) = ? AND s.genres IS NOT NULL AND s.genres <> ''`
+    )
+    .all(a) as unknown as { genres: string }[];
+  const compteur = new Map<string, number>();
+  for (const r of genresRows) {
+    for (const g of r.genres.split(",").map((x) => x.trim()).filter(Boolean)) {
+      compteur.set(g, (compteur.get(g) ?? 0) + 1);
+    }
+  }
+  const genreDominant =
+    [...compteur.entries()].sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0]))[0]?.[0] ??
+    null;
+
+  const bingeRow = db
+    .prepare(
+      `SELECT substr(vu_le,1,10) AS jour, COUNT(*) AS nb
+         FROM episodes_vus WHERE substr(vu_le,1,4) = ?
+        GROUP BY jour ORDER BY nb DESC, jour DESC LIMIT 1`
+    )
+    .get(a) as unknown as { jour: string; nb: number } | undefined;
+
+  const moisNb = new Map(
+    (
+      db
+        .prepare(
+          `SELECT substr(vu_le,6,2) AS mois, COUNT(*) AS nb
+             FROM episodes_vus WHERE substr(vu_le,1,4) = ?
+            GROUP BY mois`
+        )
+        .all(a) as unknown as { mois: string; nb: number }[]
+    ).map((r) => [r.mois, r.nb] as const)
+  );
+  const parMois = Array.from({ length: 12 }, (_, i) => {
+    const mm = String(i + 1).padStart(2, "0");
+    return { mois: mm, nb: moisNb.get(mm) ?? 0 };
+  });
+
+  return {
+    annee: a,
+    totalMinutes,
+    nbEpisodes,
+    nbFilms,
+    nbSeries,
+    topSeries,
+    genreDominant,
+    topBinge: bingeRow ? { ...bingeRow } : null,
+    parMois,
+  };
+}
+
+// --- Bandeau nouveautés (#5) -----------------------------------------------
+
+export interface Nouveautes {
+  episodesDispo: number;
+  seriesEnRetard: number;
+  sortiesSemaine: number;
+}
+
+export function nouveautes(db: DB): Nouveautes {
+  const retard = db
+    .prepare(
+      `SELECT COUNT(*) AS eps, COUNT(DISTINCT serie_id) AS series
+         FROM episodes_catalogue c WHERE ${RETARD_WHERE}`
+    )
+    .get() as unknown as { eps: number; series: number };
+  const sortiesSemaine = (
+    db
+      .prepare(
+        `SELECT COUNT(*) AS n FROM episodes_catalogue c
+           JOIN series s ON s.id = c.serie_id
+          WHERE c.saison >= 1
+            AND c.date_diffusion IS NOT NULL
+            AND c.date_diffusion > date('now')
+            AND c.date_diffusion <= date('now', '+7 days')
+            AND EXISTS (SELECT 1 FROM episodes_vus v WHERE v.serie_id = s.id)`
+      )
+      .get() as unknown as { n: number }
+  ).n;
+  return {
+    episodesDispo: retard.eps ?? 0,
+    seriesEnRetard: retard.series ?? 0,
+    sortiesSemaine: sortiesSemaine ?? 0,
+  };
+}
+
+// --- Méta applicative (#1) -------------------------------------------------
+
+export function appMetaGet(db: DB, cle: string): string | null {
+  const r = db.prepare("SELECT valeur FROM app_meta WHERE cle = ?").get(cle) as unknown as
+    | { valeur: string | null }
+    | undefined;
+  return r ? r.valeur : null;
+}
+
+export function appMetaSet(db: DB, cle: string, valeur: string): void {
+  db.prepare(
+    `INSERT INTO app_meta (cle, valeur) VALUES (?, ?)
+     ON CONFLICT (cle) DO UPDATE SET valeur = excluded.valeur`
+  ).run(cle, valeur);
 }
 
 // Avancement d'une série (hors spéciaux) + temps de rattrapage des épisodes diffusés non vus.

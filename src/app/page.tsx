@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getDb } from "@/lib/db";
-import { tableauASuivre, type TriASuivre } from "@/lib/queries";
+import { tableauASuivre, nouveautes, type TriASuivre } from "@/lib/queries";
 import { ProchainEpisode } from "@/app/components/ProchainEpisode";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +12,9 @@ export default async function ASuivre({
 }) {
   const { tri } = await searchParams;
   const mode: TriASuivre = tri === "prochain" ? "prochain" : "dernier_vu";
-  const lignes = tableauASuivre(getDb(), mode);
+  const db = getDb();
+  const lignes = tableauASuivre(db, mode);
+  const nouv = nouveautes(db);
   if (lignes.length === 0) {
     return (
       <div>
@@ -20,10 +22,12 @@ export default async function ASuivre({
         <p className="muted">
           Tu es à jour 🎉 — <Link href="/mes-series">voir toutes mes séries</Link>.
         </p>
-        <p className="muted" style={{ fontSize: "0.9rem" }}>
-          (Si tu viens d&apos;importer, le catalogue des épisodes se remplit au lancement via{" "}
-          <code>demarrer-monsuivi.bat</code>.)
-        </p>
+        {nouv.sortiesSemaine > 0 && (
+          <p className="muted">
+            {nouv.sortiesSemaine} sortie{nouv.sortiesSemaine > 1 ? "s" : ""} cette semaine —{" "}
+            <Link href="/a-venir">voir À venir</Link>.
+          </p>
+        )}
       </div>
     );
   }
@@ -35,6 +39,9 @@ export default async function ASuivre({
           · {lignes.length}
         </span>
       </h1>
+
+      <NouveautesBandeau nouv={nouv} />
+
       <div className="tri-selecteur">
         <span className="tri-label">Trier</span>
         <Link className={mode === "dernier_vu" ? "actif" : ""} href="/?tri=dernier_vu">
@@ -49,6 +56,29 @@ export default async function ASuivre({
           <ProchainEpisode key={l.serie_id} ligne={l} />
         ))}
       </div>
+    </div>
+  );
+}
+
+function NouveautesBandeau({
+  nouv,
+}: {
+  nouv: { episodesDispo: number; seriesEnRetard: number; sortiesSemaine: number };
+}) {
+  if (nouv.episodesDispo === 0 && nouv.sortiesSemaine === 0) return null;
+  return (
+    <div className="nouv-bandeau">
+      {nouv.episodesDispo > 0 && (
+        <span className="nouv-seg">
+          <strong>{nouv.episodesDispo}</strong> épisode{nouv.episodesDispo > 1 ? "s" : ""} dispo
+          {nouv.seriesEnRetard > 0 ? ` · ${nouv.seriesEnRetard} série${nouv.seriesEnRetard > 1 ? "s" : ""}` : ""}
+        </span>
+      )}
+      {nouv.sortiesSemaine > 0 && (
+        <Link className="nouv-seg nouv-lien" href="/a-venir">
+          <strong>{nouv.sortiesSemaine}</strong> sortie{nouv.sortiesSemaine > 1 ? "s" : ""} cette semaine ›
+        </Link>
+      )}
     </div>
   );
 }

@@ -21,6 +21,8 @@ export function migrate(db: DB): void {
   add("note", "INTEGER");
   add("favori", "INTEGER DEFAULT 0");
   add("genres", "TEXT");
+  // Plateformes de streaming (JSON [{nom, logo_path}]) rafraîchies à la resync.
+  add("providers", "TEXT");
 
   // Colonnes ajoutées après coup sur episodes_catalogue.
   const colsCat = (
