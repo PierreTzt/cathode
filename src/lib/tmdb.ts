@@ -44,6 +44,7 @@ export interface CatalogueEpisode {
 
 export interface CatalogueSerie {
   statut: "en cours" | "terminée";
+  statutDetail: string | null;
   episodes: CatalogueEpisode[];
 }
 
@@ -69,6 +70,7 @@ export async function fetchSeriesEpisodes(
     const statut: CatalogueSerie["statut"] = STATUTS_EN_COURS.has(serie.status ?? "")
       ? "en cours"
       : "terminée";
+    const statutDetail = serie.status ?? null;
     const saisons = (serie.seasons ?? [])
       .map((s) => s.season_number)
       .filter((n) => Number.isInteger(n))
@@ -102,7 +104,7 @@ export async function fetchSeriesEpisodes(
         });
       }
     }
-    return { statut, episodes };
+    return { statut, statutDetail, episodes };
   } catch {
     return null;
   }

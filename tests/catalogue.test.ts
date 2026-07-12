@@ -16,6 +16,7 @@ function seed() {
 
 const catalogue: CatalogueSerie = {
   statut: "terminée",
+  statutDetail: "Ended",
   episodes: [
     { saison: 1, episode: 1, titre: "Pilote", apercu: "Le tout premier épisode.", still_path: "/still1.jpg", date_diffusion: "2003-09-23", duree_min: 45 },
     { saison: 1, episode: 2, titre: "Ep2", apercu: null, still_path: null, date_diffusion: "2003-09-30", duree_min: 45 },

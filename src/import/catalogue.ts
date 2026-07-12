@@ -40,7 +40,7 @@ export async function majCatalogue(
         AND (duree_min IS NULL OR duree_min = 0)`
   );
   const majSerie = db.prepare(
-    "UPDATE series SET statut_tmdb = ?, catalogue_maj_le = date('now') WHERE id = ?"
+    "UPDATE series SET statut_tmdb = ?, statut_detail = ?, catalogue_maj_le = date('now') WHERE id = ?"
   );
 
   let seriesTraitees = 0;
@@ -63,7 +63,7 @@ export async function majCatalogue(
           dureesComblees += Number(info.changes);
         }
       }
-      majSerie.run(cat.statut, s.id);
+      majSerie.run(cat.statut, cat.statutDetail ?? null, s.id);
     });
     seriesTraitees++;
   }

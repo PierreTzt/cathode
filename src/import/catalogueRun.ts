@@ -25,6 +25,7 @@ async function main() {
   console.log(`Similaires MàJ     : ${r.recommandations}`);
   console.log(`Suggestions        : ${r.suggestions}`);
   console.log(`Notifications push : ${r.pushEnvoyes}`);
+  console.log(`Jellyfin ajoutés   : ${r.jellyfinAjoutes}`);
   console.log(`Échecs             : ${r.echecs}`);
   console.log("---------------------------------------");
   db.close();

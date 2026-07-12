@@ -68,6 +68,7 @@ describe("détail série", () => {
       note: null,
       favori: 0,
       statut_tmdb: null,
+      statut_detail: null,
       suivi_statut: "actif",
       providers: [],
       cast: [],

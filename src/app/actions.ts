@@ -13,13 +13,17 @@ import {
   definirStatutSuivi,
   ajouterPushSub,
   supprimerPushSub,
+  appMetaSet,
+  reglages,
   type SuiviStatut,
 } from "@/lib/queries";
 import { rechercheSeries, type ResultatRechercheSerie } from "@/lib/tmdb";
+import { testerConnexion, type JellyfinConfig } from "@/lib/jellyfin";
 import { majCatalogue } from "@/import/catalogue";
 import { majProvidersToutes } from "@/import/providers";
 import { majCastToutes } from "@/import/cast";
 import { majRecommandationsToutes } from "@/import/recommandationsSeries";
+import { syncJellyfin, type ResumeJellyfin } from "@/import/jellyfin";
 import { resync, type ResumeResync } from "@/import/resync";
 import { revalidatePath } from "next/cache";
 
@@ -101,6 +105,41 @@ export async function actionDesabonnerPush(endpoint: string): Promise<void> {
 // Clé VAPID publique lue au runtime (évite un rebuild pour changer les clés).
 export async function actionClePush(): Promise<string | null> {
   return process.env.VAPID_PUBLIC_KEY || null;
+}
+
+// --- Réglages ---
+
+export async function actionAvenirVue(vue: "calendrier" | "liste"): Promise<void> {
+  appMetaSet(getDb(), "avenir_vue_defaut", vue === "liste" ? "liste" : "calendrier");
+  revalidatePath("/a-venir");
+  revalidatePath("/reglages");
+}
+
+export async function actionSauverJellyfin(cfg: JellyfinConfig & { auto: boolean }): Promise<void> {
+  const db = getDb();
+  appMetaSet(db, "jellyfin_url", cfg.url.trim());
+  appMetaSet(db, "jellyfin_token", cfg.token.trim());
+  appMetaSet(db, "jellyfin_user_id", cfg.userId.trim());
+  appMetaSet(db, "jellyfin_auto", cfg.auto ? "1" : "0");
+  revalidatePath("/reglages");
+}
+
+export async function actionTesterJellyfin(
+  cfg: JellyfinConfig
+): Promise<{ ok: boolean; nom?: string; erreur?: string }> {
+  return testerConnexion(cfg);
+}
+
+export async function actionSyncJellyfin(): Promise<ResumeJellyfin> {
+  const db = getDb();
+  const cfg = reglages(db).jellyfin;
+  if (!cfg.url || !cfg.token || !cfg.userId) {
+    return { appariees: 0, nonAppariees: 0, ajoutes: 0, erreur: "Jellyfin non configuré" };
+  }
+  const r = await syncJellyfin(db, cfg);
+  revalidatePath("/");
+  revalidatePath("/reglages");
+  return r;
 }
 
 // Resync manuelle (bouton du hub « Plus ») : catalogue + plateformes + suggestions.

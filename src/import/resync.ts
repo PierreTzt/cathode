@@ -4,6 +4,7 @@ import {
   compterPushSubs,
   episodesANotifier,
   marquerNotifie,
+  reglages,
 } from "../lib/queries";
 import { envoyerATous } from "../lib/push";
 import { majCatalogue } from "./catalogue";
@@ -11,6 +12,7 @@ import { majProvidersToutes } from "./providers";
 import { majCastToutes } from "./cast";
 import { majRecommandationsToutes } from "./recommandationsSeries";
 import { construireSuggestions } from "./suggestions";
+import { syncJellyfin } from "./jellyfin";
 
 export interface ResumeResync {
   seriesTraitees: number;
@@ -20,6 +22,7 @@ export interface ResumeResync {
   recommandations: number;
   suggestions: number;
   pushEnvoyes: number;
+  jellyfinAjoutes: number;
   echecs: number;
 }
 
@@ -34,6 +37,18 @@ export async function resync(db: DB, options: { forcer?: boolean } = {}): Promis
   const recos = await majRecommandationsToutes(db);
   const sugg = await construireSuggestions(db);
   appMetaSet(db, "suggestions", JSON.stringify(sugg));
+
+  // Sync Jellyfin optionnelle (si activée et configurée).
+  let jellyfinAjoutes = 0;
+  const reg = reglages(db);
+  if (reg.jellyfin.auto && reg.jellyfin.url && reg.jellyfin.token && reg.jellyfin.userId) {
+    try {
+      const r = await syncJellyfin(db, reg.jellyfin);
+      jellyfinAjoutes = r.ajoutes;
+    } catch {
+      /* la sync Jellyfin ne doit pas casser la resync */
+    }
+  }
 
   // Notifications : nouveaux épisodes diffusés récemment, non encore notifiés.
   const aNotifier = episodesANotifier(db);
@@ -69,6 +84,7 @@ export async function resync(db: DB, options: { forcer?: boolean } = {}): Promis
     recommandations: recos.traitees,
     suggestions: sugg.length,
     pushEnvoyes,
+    jellyfinAjoutes,
     echecs: cat.echecs + prov.echecs + cast.echecs,
   };
 }

@@ -18,6 +18,8 @@ export function migrate(db: DB): void {
   add("backdrop_path", "TEXT");
   add("catalogue_maj_le", "TEXT");
   add("statut_tmdb", "TEXT");
+  // Statut TMDB brut (Returning Series / Ended / Canceled…) pour « revient le / annulée ».
+  add("statut_detail", "TEXT");
   add("note", "INTEGER");
   add("favori", "INTEGER DEFAULT 0");
   add("genres", "TEXT");

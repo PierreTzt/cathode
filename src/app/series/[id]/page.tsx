@@ -10,6 +10,7 @@ import {
 import { EpisodesTracker } from "@/app/components/EpisodesTracker";
 import { NoteFavori } from "@/app/components/NoteFavori";
 import { StatutBadge } from "@/app/components/StatutBadge";
+import { StatutRenouvellement } from "@/app/components/StatutRenouvellement";
 import { StatutSuivi } from "@/app/components/StatutSuivi";
 import { Providers } from "@/app/components/Providers";
 import { CastRow } from "@/app/components/CastRow";
@@ -45,6 +46,12 @@ export default async function SeriePage({ params }: { params: Promise<{ id: stri
   const etat = etatSuivi({ nbVus: prog.vus, enRetard, statutTmdb: serie.statut_tmdb });
   const moyenneGlobale =
     notes.length > 0 ? notes.reduce((a, n) => a + n.note, 0) / notes.length : null;
+  // Prochaine diffusion = plus proche épisode futur du catalogue (pour « revient le »).
+  const prochaineDate =
+    eps
+      .filter((e) => e.diffuse === 0 && e.date_diffusion)
+      .map((e) => e.date_diffusion as string)
+      .sort()[0] ?? null;
 
   return (
     <div>
@@ -71,6 +78,7 @@ export default async function SeriePage({ params }: { params: Promise<{ id: stri
               {prog.vus}/{prog.diffuses} épisodes vus
               {prog.total > prog.diffuses ? ` · ${prog.total} au total` : ""}
             </p>
+            <StatutRenouvellement statutDetail={serie.statut_detail} prochaineDate={prochaineDate} />
             <Providers providers={serie.providers} />
             <NoteFavori serieId={serieId} note={serie.note} favori={serie.favori} />
             <StatutSuivi serieId={serieId} statut={serie.suivi_statut} />

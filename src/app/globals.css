@@ -9,6 +9,17 @@
   --border: #232a33;
   --radius: 12px;
 }
+/* Thème clair (surcharge des variables ; posé via data-theme avant peinture) */
+:root[data-theme="light"] {
+  --bg: #f4f1ea;
+  --panel: #ffffff;
+  --panel-2: #efeadf;
+  --text: #201d17;
+  --muted: #6f6d63;
+  --gold: #a97f28;
+  --gold-ink: #ffffff;
+  --border: #e3ddce;
+}
 * { box-sizing: border-box; }
 body {
   font-family: system-ui, -apple-system, sans-serif;
@@ -507,8 +518,57 @@ a.journal-lien:hover { border-color: var(--gold); }
 
 /* Notifications (Plus) */
 .notifs { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.notifs-btn { background: var(--gold); color: var(--gold-ink); border: none; border-radius: 10px;
-  padding: 11px 18px; font-weight: 700; cursor: pointer; }
+.notifs-btn { display: inline-block; background: var(--gold); color: var(--gold-ink); border: none; border-radius: 10px;
+  padding: 11px 18px; font-weight: 700; cursor: pointer; text-decoration: none; }
 .notifs-btn.secondaire { background: transparent; color: var(--muted); border: 1px solid var(--border); padding: 8px 14px; }
 .notifs-btn:disabled { opacity: .55; cursor: default; }
 .notifs-ok { color: #6fbf8a; font-weight: 700; }
+
+/* ---- Phase 7 ---- */
+
+/* Statut de renouvellement (fiche) */
+.renouvellement { margin: 8px 0 0; font-size: .9rem; color: var(--text); }
+.renouvellement strong { color: var(--gold); }
+.renouvellement.annulee { color: #e0607a; }
+
+/* Sélecteur (thème, vue) — segmenté */
+.theme-sel { display: inline-flex; gap: 4px; padding: 4px; background: var(--panel-2);
+  border: 1px solid var(--border); border-radius: 999px; }
+.theme-btn { background: transparent; border: none; color: var(--muted); cursor: pointer;
+  padding: 7px 16px; border-radius: 999px; font-size: .85rem; font-weight: 600; }
+.theme-btn.actif { background: var(--gold); color: var(--gold-ink); }
+.theme-btn:disabled { opacity: .6; cursor: default; }
+
+/* Réglages Jellyfin */
+.jf-form { display: flex; flex-direction: column; gap: 12px; max-width: 460px; }
+.jf-champ { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; }
+.jf-champ .search { max-width: none; margin: 0; }
+.jf-auto { display: flex; align-items: center; gap: 8px; font-size: .88rem; }
+.jf-auto input { width: 16px; height: 16px; accent-color: var(--gold); }
+.jf-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.jf-msg { margin: 4px 0 0; }
+
+/* À venir : barre + calendrier */
+.avenir-barre { margin: 4px 0 18px; }
+.cal-tete { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 12px; }
+.cal-mois { font-weight: 700; font-size: 1.05rem; min-width: 150px; text-align: center; }
+.cal-nav { background: var(--panel); border: 1px solid var(--border); color: var(--text);
+  width: 34px; height: 34px; border-radius: 8px; font-size: 1.1rem; cursor: pointer; }
+.cal-nav:hover { border-color: var(--gold); color: var(--gold); }
+.cal-grille { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-jour-tete { text-align: center; font-size: .72rem; font-weight: 700; color: var(--muted); padding: 2px 0; }
+.cal-cell { min-height: 62px; border: 1px solid var(--border); border-radius: 8px; padding: 3px;
+  background: var(--panel); display: flex; flex-direction: column; gap: 2px; }
+.cal-cell.vide { background: transparent; border-color: transparent; }
+.cal-cell.today { border-color: var(--gold); }
+.cal-num { font-size: .72rem; color: var(--muted); font-weight: 600; }
+.cal-cell.today .cal-num { color: var(--gold); }
+.cal-eps { display: flex; flex-wrap: wrap; gap: 2px; }
+.cal-ep { width: 18px; height: 27px; border-radius: 3px; overflow: hidden; background: var(--panel-2);
+  display: grid; place-items: center; font-size: .6rem; font-weight: 700; color: var(--muted); }
+.cal-ep img { width: 100%; height: 100%; object-fit: cover; }
+.cal-plus { font-size: .62rem; color: var(--muted); align-self: center; }
+@media (max-width: 560px) {
+  .cal-cell { min-height: 50px; }
+  .cal-ep { width: 15px; height: 22px; }
+}

@@ -89,6 +89,7 @@ describe("fetchSeriesEpisodes", () => {
     process.env.TMDB_READ_TOKEN = "test-token";
     const r = await fetchSeriesEpisodes(42, fakeFetch());
     expect(r!.statut).toBe("terminée");
+    expect(r!.statutDetail).toBe("Ended");
     expect(r!.episodes).toEqual([
       { saison: 0, episode: 1, titre: "Special", apercu: "Un hors-série.", still_path: "/s0e1.jpg", date_diffusion: "2003-01-01", duree_min: 20 },
       { saison: 1, episode: 1, titre: "Pilot", apercu: null, still_path: "/s1e1.jpg", date_diffusion: "2003-09-23", duree_min: 45 },

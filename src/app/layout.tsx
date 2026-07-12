@@ -25,10 +25,14 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+// Applique le thème avant peinture (anti-flash). Défaut sombre ; « auto » suit le système.
+const THEME_INIT = `(function(){try{var t=localStorage.getItem('monsuivi-theme')||'dark';var r=t==='auto'?(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):t;document.documentElement.setAttribute('data-theme',r);}catch(e){}})();`;
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="fr">
+    <html lang="fr" data-theme="dark">
       <body>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
         <nav className="top-nav">
           <Link href="/">À suivre</Link>
           <Link href="/a-venir">À venir</Link>
@@ -37,6 +41,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <Link href="/recherche">Rechercher</Link>
           <Link href="/films">Films</Link>
           <Link href="/stats">Statistiques</Link>
+          <Link href="/reglages">Réglages</Link>
           <Link href="/plus">Plus</Link>
         </nav>
         <main>{children}</main>

@@ -62,6 +62,7 @@ export interface DetailSerie {
   note: number | null;
   favori: number;
   statut_tmdb: string | null;
+  statut_detail: string | null;
   suivi_statut: string;
   providers: Provider[];
   cast: CastMembre[];
@@ -71,7 +72,7 @@ export interface DetailSerie {
 export function detailSerie(db: DB, id: number): DetailSerie | undefined {
   const row = db
     .prepare(
-      `SELECT nom, poster_path, backdrop_path, note, favori, statut_tmdb, suivi_statut,
+      `SELECT nom, poster_path, backdrop_path, note, favori, statut_tmdb, statut_detail, suivi_statut,
               providers, casting, recommandations FROM series WHERE id = ?`
     )
     .get(id) as unknown as
@@ -82,6 +83,7 @@ export function detailSerie(db: DB, id: number): DetailSerie | undefined {
         note: number | null;
         favori: number;
         statut_tmdb: string | null;
+        statut_detail: string | null;
         suivi_statut: string | null;
         providers: string | null;
         casting: string | null;
@@ -96,6 +98,7 @@ export function detailSerie(db: DB, id: number): DetailSerie | undefined {
     note: row.note,
     favori: row.favori,
     statut_tmdb: row.statut_tmdb,
+    statut_detail: row.statut_detail,
     suivi_statut: row.suivi_statut ?? "actif",
     providers: parseJsonArray<Provider>(row.providers),
     cast: parseJsonArray<CastMembre>(row.casting),
@@ -775,6 +778,60 @@ export function appMetaSet(db: DB, cle: string, valeur: string): void {
     `INSERT INTO app_meta (cle, valeur) VALUES (?, ?)
      ON CONFLICT (cle) DO UPDATE SET valeur = excluded.valeur`
   ).run(cle, valeur);
+}
+
+// --- Réglages (app_meta) ---------------------------------------------------
+
+export interface ReglagesJellyfin {
+  url: string;
+  token: string;
+  userId: string;
+  auto: boolean;
+}
+export interface Reglages {
+  avenirVue: "calendrier" | "liste";
+  jellyfin: ReglagesJellyfin;
+}
+
+export function reglages(db: DB): Reglages {
+  const g = (c: string) => appMetaGet(db, c) ?? "";
+  return {
+    avenirVue: g("avenir_vue_defaut") === "liste" ? "liste" : "calendrier",
+    jellyfin: {
+      url: g("jellyfin_url"),
+      token: g("jellyfin_token"),
+      userId: g("jellyfin_user_id"),
+      auto: g("jellyfin_auto") === "1",
+    },
+  };
+}
+
+// Upsert d'un épisode vu venant de Jellyfin (complément du marquage manuel) :
+// n'écrase pas un vu_le existant, ne fait que remonter le rewatch. Renvoie true si ajout.
+export function upsertVuJellyfin(
+  db: DB,
+  serieId: number,
+  saison: number,
+  episode: number,
+  vuLe: string | null,
+  rewatch: number
+): boolean {
+  const existe = db
+    .prepare("SELECT id FROM episodes_vus WHERE serie_id=? AND saison=? AND episode=?")
+    .get(serieId, saison, episode);
+  if (existe) {
+    db.prepare(
+      "UPDATE episodes_vus SET rewatch_count = MAX(rewatch_count, ?) WHERE serie_id=? AND saison=? AND episode=?"
+    ).run(rewatch, serieId, saison, episode);
+    return false;
+  }
+  db.prepare(
+    `INSERT INTO episodes_vus (serie_id, saison, episode, episode_source_id, vu_le, duree_min, rewatch_count)
+     VALUES (?, ?, ?, NULL, ?,
+             COALESCE((SELECT duree_min FROM episodes_catalogue WHERE serie_id=? AND saison=? AND episode=?), 0),
+             ?)`
+  ).run(serieId, saison, episode, vuLe, serieId, saison, episode, rewatch);
+  return true;
 }
 
 // --- Activité par jour (heatmap #9) ---------------------------------------
