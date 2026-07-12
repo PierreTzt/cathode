@@ -5,12 +5,17 @@ import Link from "next/link";
 import { BottomNav } from "@/app/components/BottomNav";
 import { RegisterSW } from "@/app/components/RegisterSW";
 
+// Next ne préfixe PAS le basePath aux URLs de metadata → on le fait à la main.
+// (Les fichiers de public/ sont servis sous le basePath, mais les <link> non préfixés
+// pointeraient vers la racine du domaine, pas vers /monsuivi.)
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 export const metadata: Metadata = {
   title: "MonSuivi",
   applicationName: "MonSuivi",
-  manifest: "/manifest.webmanifest",
+  manifest: `${BASE}/manifest.webmanifest`,
   appleWebApp: { capable: true, title: "MonSuivi", statusBarStyle: "black-translucent" },
-  icons: { icon: "/icon-192.png", apple: "/apple-touch-icon.png" },
+  icons: { icon: `${BASE}/icon-192.png`, apple: `${BASE}/apple-touch-icon.png` },
 };
 
 export const viewport: Viewport = {
