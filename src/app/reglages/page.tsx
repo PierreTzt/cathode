@@ -6,12 +6,14 @@ import { NotifsToggle } from "@/app/components/NotifsToggle";
 import { ResyncBouton } from "@/app/components/ResyncBouton";
 import { JellyfinReglages } from "@/app/components/JellyfinReglages";
 import { Restauration } from "@/app/components/Restauration";
+import { VersionMaj } from "@/app/components/VersionMaj";
+import { etatVersion } from "@/lib/version";
 
 export const dynamic = "force-dynamic";
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
-export default function ReglagesPage() {
+export default async function ReglagesPage() {
   const db = getDb();
   const reg = reglages(db);
   const derniere = appMetaGet(db, "derniere_resync");
@@ -62,6 +64,11 @@ export default function ReglagesPage() {
           </p>
           <Restauration />
         </div>
+      </section>
+
+      <section className="plus-bloc">
+        <h2>Version</h2>
+        <VersionMaj initial={await etatVersion(db)} />
       </section>
 
       <section className="plus-bloc">

@@ -35,6 +35,8 @@ fi
 git pull --ff-only
 
 # Build séparé du démarrage : un échec ici laisse l'ancien conteneur en place.
+CATHODE_VERSION=$(git rev-parse --short=7 HEAD)
+export CATHODE_VERSION
 docker compose build
 docker compose up -d
 

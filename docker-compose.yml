@@ -6,6 +6,8 @@ services:
       # pas seulement dans `environment`. Le retirer sert l'appli à la racine.
       args:
         BASE_PATH: /cathode
+        # Renseigné par scripts/maj-auto.sh ; vide sinon (version « inconnue »).
+        CATHODE_VERSION: "${CATHODE_VERSION:-}"
     image: cathode:latest
     container_name: cathode
     restart: unless-stopped

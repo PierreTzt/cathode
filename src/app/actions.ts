@@ -1,4 +1,5 @@
 "use server";
+import { etatVersion, type EtatVersion } from "@/lib/version";
 import { getDb } from "@/lib/db";
 import {
   marquerEpisodeVu,
@@ -193,4 +194,9 @@ export async function actionAjouterSerie(s: ResultatRecherche): Promise<{ id: nu
   revalidatePath("/mes-series");
   revalidatePath("/");
   return { id, existait };
+}
+
+// Force une vérification de mise à jour (contourne le cache de 6 h).
+export async function actionVerifierMaj(): Promise<EtatVersion> {
+  return etatVersion(getDb(), { forcer: true });
 }
