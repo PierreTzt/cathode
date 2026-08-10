@@ -73,6 +73,26 @@ lance la commande en boucle (à adapter) :
 > Note : la resync peut aussi être déclenchée à la main depuis l'app
 > (onglet **Plus** → « Mettre à jour maintenant »).
 
+## Mise à jour automatique depuis Git
+
+`scripts/maj-auto.sh` interroge le dépôt et ne fait rien tant qu'aucun nouveau
+commit n'est disponible. Quand il y en a un : sauvegarde de la base, `git pull`,
+build, puis redémarrage.
+
+```cron
+# Cathode — mise à jour depuis Git, tous les jours à 5 h
+0 5 * * * /home/ubuntu/cathode/scripts/maj-auto.sh >> /home/ubuntu/cathode-maj.log 2>&1
+```
+
+Le build est fait **avant** de remplacer le conteneur : s'il échoue, la version
+en cours continue de tourner et l'erreur part dans le log. Le script est
+idempotent et peut être lancé à la main à tout moment.
+
+Choix assumé du *poll* plutôt que d'un webhook GitHub : aucun port à exposer,
+aucun secret partagé avec un tiers. Le prix est un délai pouvant aller jusqu'à
+24 h, sans importance ici — et `docker compose up -d --build` reste disponible
+pour déployer sur-le-champ.
+
 ## Sauvegardes
 
 `npm run backup` produit un snapshot cohérent (`VACUUM INTO`) dans
