@@ -12,9 +12,14 @@ racine). `docker-compose.yml` le fixe à `/cathode` à **deux** endroits :
 ## Démarrer / mettre à jour l'image
 
 ```bash
-docker compose build
+CATHODE_VERSION=$(git rev-parse --short=7 HEAD) docker compose build
 docker compose up -d
 ```
+
+`CATHODE_VERSION` alimente la section **Réglages → Version**, qui compare le
+commit installé au dernier commit publié. L'omettre n'empêche rien de
+fonctionner : la version s'affiche simplement comme « inconnue » et la
+comparaison est désactivée. `scripts/maj-auto.sh` la renseigne tout seul.
 
 Le conteneur `cathode` écoute sur `127.0.0.1:3000` (Caddy publie vers l'extérieur).
 La base et ses sauvegardes sont persistées via le volume `./data`.
@@ -87,6 +92,10 @@ build, puis redémarrage.
 Le build est fait **avant** de remplacer le conteneur : s'il échoue, la version
 en cours continue de tourner et l'erreur part dans le log. Le script est
 idempotent et peut être lancé à la main à tout moment.
+
+À savoir : le script se met à jour lui-même au `git pull`. Une modification du
+script ne prend donc effet qu'à l'exécution **suivante** — celle qui la
+récupère tourne encore avec l'ancien code.
 
 Choix assumé du *poll* plutôt que d'un webhook GitHub : aucun port à exposer,
 aucun secret partagé avec un tiers. Le prix est un délai pouvant aller jusqu'à
