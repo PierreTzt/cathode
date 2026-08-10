@@ -3,9 +3,8 @@
 A self-hosted TV show and movie tracker. Know what to watch next, tick off
 episodes, and keep your viewing history on your own machine.
 
-Cathode was built as a replacement for TV Time after its ads and sync problems
-became tiresome. It imports a TV Time GDPR export if you have one, and works
-perfectly well without one.
+Cathode was built to replace TV Time after the service shut down. It imports a
+TV Time GDPR export if you saved one, and works perfectly well without.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -128,8 +127,8 @@ deployment with Caddy and cron jobs.
 
 ### Importing from TV Time
 
-Optional. Request your data export from TV Time, unzip it into a `gdpr-data/`
-directory at the project root, then:
+Optional, and only possible if you saved your data export before TV Time closed.
+Unzip it into a `gdpr-data/` directory at the project root, then:
 
 ```bash
 npm run import
@@ -161,7 +160,7 @@ This product uses the TMDB API but is not endorsed or certified by
 images come from TMDB.
 
 Cathode is not affiliated with, endorsed by, or connected to TV Time. It reads
-the personal data export TV Time provides to its users, and uses none of their
+the personal data export TV Time provided to its users, and uses none of their
 trademarks, logos or APIs.
 
 ## Licence
