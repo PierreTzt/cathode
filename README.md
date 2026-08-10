@@ -65,7 +65,7 @@ dependency to compile.
 ## Getting started
 
 ```bash
-git clone https://github.com/PierreTzT/cathode.git
+git clone https://github.com/PierreTzt/cathode.git
 cd cathode
 npm install
 cp .env.example .env.local   # then add your TMDB token
