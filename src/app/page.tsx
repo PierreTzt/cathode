@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { getDb } from "@/lib/db";
-import { tableauASuivre, nouveautes, recapHebdo, type TriASuivre } from "@/lib/queries";
+import {
+  tableauASuivre,
+  nouveautes,
+  recapHebdo,
+  compterSeries,
+  type TriASuivre,
+} from "@/lib/queries";
+import { tmdbConfigure } from "@/lib/tmdb";
 import { SuiviListe } from "@/app/components/SuiviListe";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +23,45 @@ export default async function ASuivre({
   const lignes = tableauASuivre(db, mode);
   const nouv = nouveautes(db);
   const recap = recapHebdo(db);
+  // Bibliothèque vide = premier lancement, pas « rien à voir ce soir ».
+  if (compterSeries(db) === 0) {
+    const tmdbActif = tmdbConfigure();
+    return (
+      <div>
+        <h1>Bienvenue</h1>
+        <p className="muted">
+          Ta bibliothèque est vide. Voilà comment la remplir.
+        </p>
+        {!tmdbActif && (
+          <div className="alerte">
+            <p>
+              <strong>Commence par une clé TMDB.</strong> Sans elle, il n&apos;y a ni recherche,
+              ni affiches, ni épisodes — l&apos;appli reste vide.
+            </p>
+            <p className="muted">
+              Crée un compte sur <a href="https://www.themoviedb.org/">themoviedb.org</a>, copie le
+              jeton d&apos;accès en lecture (Paramètres → API), mets-le dans{" "}
+              <code>.env.local</code> sous <code>TMDB_READ_TOKEN=…</code>, puis relance l&apos;appli.
+            </p>
+          </div>
+        )}
+        <p>
+          {tmdbActif ? (
+            <>
+              Ajoute tes séries depuis <Link href="/mes-series">Mes séries</Link> ou{" "}
+              <Link href="/recherche">Rechercher</Link>.
+            </>
+          ) : (
+            <>Une fois la clé en place, ajoute tes séries depuis <Link href="/recherche">Rechercher</Link>.</>
+          )}
+        </p>
+        <p className="muted">
+          Tu as un export TV Time ? Décompresse-le dans <code>gdpr-data/</code> à la racine du
+          projet et lance <code>npm run import</code> : tout ton historique sera repris.
+        </p>
+      </div>
+    );
+  }
   if (lignes.length === 0) {
     return (
       <div>

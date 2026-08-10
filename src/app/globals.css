@@ -617,3 +617,11 @@ a.journal-lien:hover { border-color: var(--gold); }
 .restore { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .restore-input { font-size: .82rem; color: var(--muted); max-width: 100%; }
 .restore-msg { width: 100%; margin: 4px 0 0; }
+
+/* Encart d'information : configuration manquante, premier lancement. */
+.alerte { background: var(--panel); border: 1px solid var(--gold);
+          border-radius: var(--radius); padding: 14px 16px; margin: 12px 0 20px; }
+.alerte p { margin: 0 0 8px; }
+.alerte p:last-child { margin-bottom: 0; }
+.alerte a { color: var(--gold); }
+.alerte code { background: rgba(200,178,115,.14); padding: 1px 5px; border-radius: 5px; }

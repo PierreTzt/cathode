@@ -180,3 +180,9 @@ export function ajouterSerie(
     .run(s.nom, s.tmdbId, s.poster_path, s.backdrop_path);
   return { id: Number(info.lastInsertRowid), existait: false };
 }
+
+// Nombre de séries en bibliothèque, pour distinguer « rien à voir ce soir »
+// d'une bibliothèque encore vide (premier lancement).
+export function compterSeries(db: DB): number {
+  return (db.prepare("SELECT COUNT(*) AS n FROM series").get() as unknown as { n: number }).n;
+}

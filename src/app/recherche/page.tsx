@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getDb } from "@/lib/db";
 import { rechercheLocale } from "@/lib/queries";
-import { rechercheSeries } from "@/lib/tmdb";
+import { rechercheSeries, tmdbConfigure } from "@/lib/tmdb";
 import { RechercheBox } from "@/app/components/RechercheBox";
 import { SuggestionsListe } from "@/app/components/SuggestionsListe";
 import { imageUrl } from "@/lib/tmdb";
@@ -35,6 +35,19 @@ export default async function RecherchePage({
     <div>
       <h1>Rechercher</h1>
       <RechercheBox initial={requete} />
+
+      {!tmdbConfigure() && (
+        <div className="alerte">
+          <p>
+            <strong>Aucune clé TMDB configurée.</strong> La recherche ne porte que sur les séries
+            déjà présentes dans ta bibliothèque : aucune nouvelle série ne peut être trouvée.
+          </p>
+          <p className="muted">
+            Ajoute <code>TMDB_READ_TOKEN</code> dans <code>.env.local</code>, puis relance
+            l&apos;appli.
+          </p>
+        </div>
+      )}
 
       {!requete && <p className="muted">Cherche parmi tes séries, tes épisodes, ou ajoute depuis TMDB.</p>}
 

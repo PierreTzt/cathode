@@ -1,3 +1,10 @@
+
+// Indique si une clé TMDB est configurée. À n'appeler que côté serveur :
+// TMDB_READ_TOKEN n'est pas exposé au client, la valeur y serait toujours false.
+export function tmdbConfigure(): boolean {
+  return !!process.env.TMDB_READ_TOKEN;
+}
+
 const IMG_BASE = "https://image.tmdb.org/t/p";
 
 export function imageUrl(

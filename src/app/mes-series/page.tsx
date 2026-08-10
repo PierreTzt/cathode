@@ -1,5 +1,6 @@
 import { getDb } from "@/lib/db";
 import { listeSeries } from "@/lib/queries";
+import { tmdbConfigure } from "@/lib/tmdb";
 import { SeriesGrid } from "@/app/components/SeriesGrid";
 import { AjoutSerie } from "@/app/components/AjoutSerie";
 
@@ -7,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default function MesSeries() {
   const series = listeSeries(getDb());
+  const tmdbActif = tmdbConfigure();
   if (series.length === 0) {
     return (
       <div>
@@ -14,7 +16,7 @@ export default function MesSeries() {
         <p className="muted">
           Importe ton export TV Time (<code>npm run import</code>) ou ajoute une série ci-dessous.
         </p>
-        <AjoutSerie />
+        <AjoutSerie tmdbActif={tmdbActif} />
       </div>
     );
   }
@@ -26,7 +28,7 @@ export default function MesSeries() {
           · {series.length}
         </span>
       </h1>
-      <AjoutSerie />
+      <AjoutSerie tmdbActif={tmdbActif} />
       <SeriesGrid series={series} />
     </div>
   );

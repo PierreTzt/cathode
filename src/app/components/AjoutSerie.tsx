@@ -10,7 +10,10 @@ import { imageUrl } from "@/lib/tmdb";
 
 type Etat = "idle" | "en cours" | "ajoutee" | "existait";
 
-export function AjoutSerie() {
+// `tmdbActif` vient du serveur : sans clé TMDB, la recherche ne renverra jamais
+// rien. On le dit plutôt que d'afficher « aucun résultat », qui laisserait
+// croire que la série n'existe pas.
+export function AjoutSerie({ tmdbActif = true }: { tmdbActif?: boolean }) {
   const [q, setQ] = useState("");
   const [resultats, setResultats] = useState<ResultatRecherche[] | null>(null);
   const [etats, setEtats] = useState<Record<number, Etat>>({});
@@ -45,6 +48,14 @@ export function AjoutSerie() {
   return (
     <div className="ajout-panel">
       <p className="ajout-titre">Ajouter une série</p>
+
+      {!tmdbActif && (
+        <p className="ajout-vide">
+          Recherche indisponible : aucune clé TMDB configurée. Ajoute{" "}
+          <code>TMDB_READ_TOKEN</code> dans <code>.env.local</code>, puis relance l&apos;appli.
+        </p>
+      )}
+
       <form className="ajout-form" onSubmit={chercher}>
         <input
           className="search"
@@ -52,8 +63,9 @@ export function AjoutSerie() {
           placeholder="Chercher une série sur TMDB…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
+          disabled={!tmdbActif}
         />
-        <button type="submit" disabled={chercheEnCours || !q.trim()}>
+        <button type="submit" disabled={!tmdbActif || chercheEnCours || !q.trim()}>
           {chercheEnCours ? "…" : "Chercher"}
         </button>
       </form>
