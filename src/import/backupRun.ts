@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { sauvegarder } from "./backup";
 
-const dbPath = join(process.cwd(), "data", "monsuivi.db");
+const dbPath = join(process.cwd(), "data", "cathode.db");
 const backupDir = join(process.cwd(), "data", "backups");
 
 const res = sauvegarder(dbPath, backupDir);

@@ -8,7 +8,7 @@ import { listeAVoir } from "../src/lib/queries";
 
 const temps: string[] = [];
 function tmpDir() {
-  const d = mkdtempSync(join(tmpdir(), "monsuivi-avoir-"));
+  const d = mkdtempSync(join(tmpdir(), "cathode-avoir-"));
   temps.push(d);
   return d;
 }

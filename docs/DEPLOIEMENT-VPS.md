@@ -1,7 +1,13 @@
 # Déploiement & exploitation (VPS)
 
-MonSuivi tourne en conteneur Docker sur le VPS, derrière Caddy, exposé sous le
-chemin `/monsuivi` (`BASE_PATH=/monsuivi`, baké au build et fixé au runtime).
+Cathode tourne en conteneur Docker sur le VPS, derrière Caddy, exposé sous le
+chemin `/cathode`.
+
+Le sous-chemin est piloté par `BASE_PATH`, vide par défaut (appli servie à la
+racine). `docker-compose.yml` le fixe à `/cathode` à **deux** endroits :
+`build.args` et `environment`. Les deux sont nécessaires — Next.js bake le
+`basePath` dans les assets au build, donc ne le passer qu'au runtime laisse des
+404 sur toutes les ressources statiques.
 
 ## Démarrer / mettre à jour l'image
 
@@ -10,7 +16,7 @@ docker compose build
 docker compose up -d
 ```
 
-Le conteneur `monsuivi` écoute sur `127.0.0.1:3000` (Caddy publie vers l'extérieur).
+Le conteneur `cathode` écoute sur `127.0.0.1:3000` (Caddy publie vers l'extérieur).
 La base et ses sauvegardes sont persistées via le volume `./data`.
 
 Le token TMDB est fourni au conteneur par la variable `TMDB_READ_TOKEN`
@@ -23,7 +29,7 @@ Le catalogue (nouveaux épisodes, dates de diffusion, statut de série), les
 plateformes « où regarder » et les suggestions sont rafraîchis par la commande :
 
 ```bash
-docker exec monsuivi npm run catalogue
+docker exec cathode npm run catalogue
 ```
 
 Cette commande écrit aussi l'horodatage `derniere_resync` (visible dans l'app,
@@ -34,8 +40,8 @@ onglet **Plus**).
 Éditer la crontab du VPS (`crontab -e`) et ajouter :
 
 ```cron
-# MonSuivi — resync catalogue + plateformes + suggestions, tous les 3 jours à 4 h
-0 4 */3 * * docker exec monsuivi npm run catalogue >> /var/log/monsuivi-resync.log 2>&1
+# Cathode — resync catalogue + plateformes + suggestions, tous les 3 jours à 4 h
+0 4 */3 * * docker exec cathode npm run catalogue >> /var/log/cathode-resync.log 2>&1
 ```
 
 ### Récap hebdomadaire (notification du dimanche)
@@ -44,8 +50,8 @@ En plus de la resync, un récap de la semaine peut être poussé en notification
 dimanche soir :
 
 ```cron
-# MonSuivi — récap hebdo poussé le dimanche à 20 h
-0 20 * * 0 docker exec monsuivi npm run recap >> /var/log/monsuivi-recap.log 2>&1
+# Cathode — récap hebdo poussé le dimanche à 20 h
+0 20 * * 0 docker exec cathode npm run recap >> /var/log/cathode-recap.log 2>&1
 ```
 
 ### Alternative : service docker-compose dédié
@@ -54,9 +60,9 @@ Si l'on préfère tout garder dans `docker-compose.yml`, ajouter un service qui
 lance la commande en boucle (à adapter) :
 
 ```yaml
-  monsuivi-cron:
-    image: monsuivi:latest
-    depends_on: [monsuivi]
+  cathode-cron:
+    image: cathode:latest
+    depends_on: [cathode]
     environment:
       - TMDB_READ_TOKEN=${TMDB_READ_TOKEN:-}
     volumes:
@@ -73,5 +79,5 @@ lance la commande en boucle (à adapter) :
 `data/backups/` avec rotation (10 dernières). À planifier de la même manière si
 souhaité, ou à lancer avant une opération risquée.
 ```bash
-docker exec monsuivi npm run backup
+docker exec cathode npm run backup
 ```

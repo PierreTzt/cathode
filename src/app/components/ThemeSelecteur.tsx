@@ -18,7 +18,7 @@ export function ThemeSelecteur() {
   const [pref, setPref] = useState<Pref>("dark");
 
   useEffect(() => {
-    const p = (localStorage.getItem("monsuivi-theme") as Pref) || "dark";
+    const p = (localStorage.getItem("cathode-theme") as Pref) || "dark";
     setPref(p);
   }, []);
 
@@ -35,7 +35,7 @@ export function ThemeSelecteur() {
 
   const choisir = (p: Pref) => {
     setPref(p);
-    localStorage.setItem("monsuivi-theme", p);
+    localStorage.setItem("cathode-theme", p);
     document.documentElement.setAttribute("data-theme", resoudre(p));
   };
 

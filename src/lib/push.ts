@@ -13,7 +13,7 @@ function config(): boolean {
   const pub = process.env.VAPID_PUBLIC_KEY;
   const priv = process.env.VAPID_PRIVATE_KEY;
   if (!pub || !priv) return false;
-  webpush.setVapidDetails(process.env.VAPID_SUBJECT || "mailto:monsuivi@localhost", pub, priv);
+  webpush.setVapidDetails(process.env.VAPID_SUBJECT || "mailto:cathode@localhost", pub, priv);
   configure = true;
   return true;
 }
@@ -61,6 +61,6 @@ export async function envoyerRecapHebdo(db: DB): Promise<{ envoyes: number }> {
     (r.nbFilms > 0 ? `, ${r.nbFilms} film${r.nbFilms > 1 ? "s" : ""}` : "") +
     ` · ${h} h` +
     (r.topSerie ? ` · surtout ${r.topSerie}` : "");
-  const res = await envoyerATous(db, { titre: "Ta semaine sur MonSuivi", corps, url: "/stats" });
+  const res = await envoyerATous(db, { titre: "Ta semaine sur Cathode", corps, url: "/stats" });
   return { envoyes: res.envoyes };
 }

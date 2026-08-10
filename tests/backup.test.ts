@@ -7,7 +7,7 @@ import { sauvegarder } from "../src/import/backup";
 
 const temps: string[] = [];
 function tmp() {
-  const d = mkdtempSync(join(tmpdir(), "monsuivi-bkp-"));
+  const d = mkdtempSync(join(tmpdir(), "cathode-bkp-"));
   temps.push(d);
   return d;
 }
@@ -16,7 +16,7 @@ afterEach(() => {
 });
 
 function creerDb(dir: string): string {
-  const p = join(dir, "monsuivi.db");
+  const p = join(dir, "cathode.db");
   const db = new DatabaseSync(p);
   db.exec("CREATE TABLE t (v TEXT); INSERT INTO t (v) VALUES ('coucou')");
   db.close();
@@ -44,7 +44,7 @@ describe("sauvegarder", () => {
       sauvegarder(dbPath, backupDir, 3, new Date(2026, 6, 9, 12, i, 0));
     }
     const restants = readdirSync(backupDir)
-      .filter((f) => /^monsuivi-.*\.db$/.test(f))
+      .filter((f) => /^cathode-.*\.db$/.test(f))
       .sort();
     expect(restants.length).toBe(3);
     expect(restants[0]).toContain("120200"); // minute 02

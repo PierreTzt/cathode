@@ -1,12 +1,18 @@
 node_modules/
-*.db
 .next/
-.env*
-clé.txt
-.env.local
-gdpr-data/
-.superpowers/
-data/
 next-env.d.ts
 tsconfig.tsbuildinfo
+
+# Base SQLite, sauvegardes et export TV Time : données personnelles.
+data/
+*.db
+gdpr-data/
+
+# Secrets. .env.example est le seul fichier d'env versionné (valeurs vides).
+.env*
+!.env.example
+
+# Outillage local.
+.superpowers/
 .claude/
+.impeccable/

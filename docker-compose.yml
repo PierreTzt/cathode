@@ -1,8 +1,13 @@
 services:
-  monsuivi:
-    build: .
-    image: monsuivi:latest
-    container_name: monsuivi
+  cathode:
+    build:
+      context: .
+      # Le basePath est baké dans les assets au build : il doit être passé ici,
+      # pas seulement dans `environment`. Le retirer sert l'appli à la racine.
+      args:
+        BASE_PATH: /cathode
+    image: cathode:latest
+    container_name: cathode
     restart: unless-stopped
     # Exposé uniquement sur la loopback : c'est Caddy qui publie vers l'extérieur.
     ports:
@@ -13,7 +18,7 @@ services:
       - .env
     environment:
       - NODE_ENV=production
-      - BASE_PATH=/monsuivi
+      - BASE_PATH=/cathode
     volumes:
       # Persiste la base (et ses fichiers WAL) hors du conteneur
       - ./data:/app/data

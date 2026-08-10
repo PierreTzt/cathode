@@ -17,7 +17,7 @@ export function sauvegarder(
 ): { chemin: string; supprimes: string[] } | null {
   if (!existsSync(dbPath)) return null;
   mkdirSync(backupDir, { recursive: true });
-  const chemin = join(backupDir, `monsuivi-${horodatage(now)}.db`);
+  const chemin = join(backupDir, `cathode-${horodatage(now)}.db`);
 
   // VACUUM INTO produit un snapshot cohérent même en mode WAL (≠ copie de fichier).
   const db = new DatabaseSync(dbPath);
@@ -31,7 +31,7 @@ export function sauvegarder(
   // Rotation : ne garder que les maxBackups plus récentes (le format AAAA-MM-JJ-HHMMSS
   // trie chronologiquement par ordre alphabétique).
   const fichiers = readdirSync(backupDir)
-    .filter((f) => /^monsuivi-.*\.db$/.test(f))
+    .filter((f) => /^cathode-.*\.db$/.test(f))
     .sort();
   const supprimes: string[] = [];
   while (fichiers.length > maxBackups) {

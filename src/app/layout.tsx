@@ -7,14 +7,14 @@ import { RegisterSW } from "@/app/components/RegisterSW";
 
 // Next ne préfixe PAS le basePath aux URLs de metadata → on le fait à la main.
 // (Les fichiers de public/ sont servis sous le basePath, mais les <link> non préfixés
-// pointeraient vers la racine du domaine, pas vers /monsuivi.)
+// pointeraient vers la racine du domaine, pas vers /cathode.)
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 export const metadata: Metadata = {
-  title: "MonSuivi",
-  applicationName: "MonSuivi",
+  title: "Cathode",
+  applicationName: "Cathode",
   manifest: `${BASE}/manifest.webmanifest`,
-  appleWebApp: { capable: true, title: "MonSuivi", statusBarStyle: "black-translucent" },
+  appleWebApp: { capable: true, title: "Cathode", statusBarStyle: "black-translucent" },
   icons: { icon: `${BASE}/icon-192.png`, apple: `${BASE}/apple-touch-icon.png` },
 };
 
@@ -26,7 +26,7 @@ export const viewport: Viewport = {
 };
 
 // Applique le thème avant peinture (anti-flash). Défaut sombre ; « auto » suit le système.
-const THEME_INIT = `(function(){try{var t=localStorage.getItem('monsuivi-theme')||'dark';var r=t==='auto'?(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):t;document.documentElement.setAttribute('data-theme',r);}catch(e){}})();`;
+const THEME_INIT = `(function(){try{var t=localStorage.getItem('cathode-theme')||'dark';var r=t==='auto'?(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):t;document.documentElement.setAttribute('data-theme',r);}catch(e){}})();`;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

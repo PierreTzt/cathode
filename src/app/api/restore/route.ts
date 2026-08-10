@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   if (buf.length < 16 || buf.subarray(0, 15).toString("latin1") !== "SQLite format 3") {
     return Response.json({ ok: false, erreur: "Ce n'est pas une base SQLite valide." }, { status: 400 });
   }
-  const dbPath = join(process.cwd(), "data", "monsuivi.db");
+  const dbPath = join(process.cwd(), "data", "cathode.db");
   const backupDir = join(process.cwd(), "data", "backups");
   try {
     sauvegarder(dbPath, backupDir); // sécurité : snapshot de l'état actuel avant remplacement

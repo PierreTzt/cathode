@@ -1,7 +1,7 @@
-// Service worker MonSuivi : installabilité PWA + coquille réseau-first + Web Push.
-// Le scope suit l'emplacement du fichier (racine ou /monsuivi/ derrière Caddy),
+// Service worker Cathode : installabilité PWA + coquille réseau-first + Web Push.
+// Le scope suit l'emplacement du fichier (racine ou /cathode/ derrière Caddy),
 // donc toutes les URLs relatives sont résolues contre self.registration.scope.
-const CACHE = "monsuivi-v1";
+const CACHE = "cathode-v1";
 
 self.addEventListener("install", () => {
   self.skipWaiting();
@@ -39,7 +39,7 @@ self.addEventListener("push", (event) => {
   } catch (e) {
     data = {};
   }
-  const titre = data.titre || "MonSuivi";
+  const titre = data.titre || "Cathode";
   const options = {
     body: data.corps || "",
     icon: "icon-192.png",

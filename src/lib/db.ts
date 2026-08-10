@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 
 export type DB = DatabaseSync;
 
-const DEFAULT_PATH = join(process.cwd(), "data", "monsuivi.db");
+const DEFAULT_PATH = join(process.cwd(), "data", "cathode.db");
 
 export function migrate(db: DB): void {
   const cols = (db.prepare("PRAGMA table_info(series)").all() as unknown as { name: string }[]).map(
