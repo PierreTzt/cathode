@@ -9,6 +9,8 @@ perfectly well without one.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+*(Version française : [README.fr.md](README.fr.md).)*
+
 > **Heads up:** the interface, the code and the comments are all in French.
 > This README is the only English part of the project.
 
@@ -51,6 +53,20 @@ one-click backup and restore.
 It installs as a PWA and can send web push notifications for new episodes and a
 Sunday weekly recap.
 
+## The screens
+
+Screen names are in French, since the interface is.
+
+- **À suivre** (up next) — the next episode of every show in progress
+- **À venir** (upcoming) — the release calendar, as a list or a month view
+- **Mes séries** (my shows) — the whole library, with filters and show adding
+- **Journal** — what you watched, and memories ("one year ago")
+- **Rechercher** (search) — search locally, then fall back to TMDB
+- **Films** (movies) — watched movies and the watchlist
+- **Statistiques** — progress, activity, total time, top shows, year in review
+- **Réglages** (settings) — theme, notifications, catalogue refresh, backup,
+  restore, Jellyfin
+
 ## Stack
 
 Deliberately small — no ORM, no CSS framework, no state library, and no native
@@ -90,6 +106,8 @@ See [`.env.example`](.env.example) for the full list. In short:
 | `TMDB_READ_TOKEN` | yes | Posters, episodes, cast, providers, search |
 | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | no | Web push notifications |
 | `BASE_PATH` | no | Serve under a sub-path instead of the domain root |
+
+Generate the VAPID pair once with `npx web-push generate-vapid-keys`.
 
 ### Docker
 
