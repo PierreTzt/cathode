@@ -25,7 +25,13 @@ export interface EtatVersion {
   titre: string | null;
   /** Date ISO du dernier commit distant. */
   date: string | null;
-  /** true si une version plus récente est disponible. */
+  /**
+   * true si le commit publié diffère du commit installé. On compare des SHA,
+   * pas un historique : sans dépôt Git dans l'image, impossible de savoir
+   * lequel précède l'autre. Un développeur ayant des commits non poussés verra
+   * donc une « mise à jour disponible » ; l'installation par clone, elle, ne
+   * peut qu'être en retard.
+   */
   majDisponible: boolean;
   /** Horodatage de la dernière vérification réussie. */
   verifieLe: string | null;
