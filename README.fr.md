@@ -1,17 +1,30 @@
+<div align="center">
+
+<img src="public/icon-192.png" alt="Cathode" width="88" />
+
 # Cathode
 
-Un suivi de séries et de films auto-hébergé. Sachez quoi regarder ensuite,
-cochez vos épisodes, et gardez votre historique chez vous.
+**Un suivi de séries et de films auto-hébergé.**
+Sachez quoi regarder ensuite, cochez vos épisodes, et gardez votre historique chez vous.
+
+[![Licence : MIT](https://img.shields.io/badge/licence-MIT-c8b273?style=flat-square)](LICENSE)
+![Next.js 15](https://img.shields.io/badge/Next.js-15-000000?style=flat-square&logo=nextdotjs&logoColor=white)
+![React 19](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=black)
+![SQLite](https://img.shields.io/badge/SQLite-node%3Asqlite-003b57?style=flat-square&logo=sqlite&logoColor=white)
+![5 dépendances](https://img.shields.io/badge/dépendances-5-c8b273?style=flat-square)
+![PWA](https://img.shields.io/badge/PWA-installable-5a3fc0?style=flat-square)
+
+[English version](README.md)
+
+</div>
 
 Cathode a été construit pour remplacer TV Time après la fermeture du service.
 Il importe un export GDPR TV Time si vous en avez conservé un, et fonctionne
 très bien sans.
 
-[![Licence : MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-
-*(English version: [README.md](README.md).)*
-
-![À suivre](docs/screenshots/01-a-suivre.png)
+<div align="center">
+  <img src="docs/screenshots/01-a-suivre.png" alt="À suivre" width="820" />
+</div>
 
 ## Ce que ça fait
 
@@ -25,25 +38,17 @@ prochain épisode — ou appuyez sur le dé quand vous n'arrivez pas à choisir.
 rattrapage. Donnez-lui un rythme — deux épisodes par soir — et elle vous dit la
 date à laquelle vous aurez fini.
 
-![Fiche série](docs/screenshots/03-fiche-serie.png)
-
 **Tenir une bibliothèque.** Filtrez vos séries par en retard, à jour, pas
 commencée, terminée, favorite, en pause ou abandonnée. Notez-les, marquez vos
 favorites, et consultez le casting, les plateformes de streaming et les séries
 similaires récupérés depuis TMDB.
 
-![Mes séries](docs/screenshots/02-mes-series.png)
-
 **Voir les chiffres.** Progression de la bibliothèque, carte d'activité sur
 douze mois, temps total passé devant l'écran, votre plus gros jour de binge, top
 séries, et un bilan annuel.
 
-![Statistiques](docs/screenshots/04-statistiques.png)
-
 **Les films aussi.** Films vus avec notes et plateformes, plus une liste
 « à voir » avec un bouton **« j'ai vu »**.
-
-![Films](docs/screenshots/05-films.png)
 
 **Et le reste.** Un calendrier des prochaines diffusions, un journal de
 visionnage, la recherche TMDB pour ajouter des séries, le statut de
@@ -54,24 +59,34 @@ avec rotation, et une sauvegarde/restauration en un clic.
 L'appli s'installe comme une PWA et peut envoyer des notifications push pour les
 nouveaux épisodes ainsi qu'un récapitulatif le dimanche.
 
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/03-fiche-serie.png" alt="Fiche série" /><br/><sub><b>Fiche série</b> — suivi des épisodes, temps de rattrapage, planificateur</sub></td>
+<td width="50%"><img src="docs/screenshots/02-mes-series.png" alt="Mes séries" /><br/><sub><b>Mes séries</b> — la bibliothèque, filtrée par état</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/04-statistiques.png" alt="Statistiques" /><br/><sub><b>Statistiques</b> — progression, carte d'activité, top séries</sub></td>
+<td width="50%"><img src="docs/screenshots/05-films.png" alt="Films" /><br/><sub><b>Films</b> — vus, notés, avec les plateformes</sub></td>
+</tr>
+</table>
+
 ## Les écrans
 
-- **À suivre** — le prochain épisode de chaque série en cours.
-- **À venir** — le calendrier des prochaines diffusions, en liste ou en mois.
-- **Mes séries** — toute la bibliothèque, avec filtres et ajout de séries.
-- **Journal** — l'historique de ce que vous avez vu, et les souvenirs
-  (« il y a un an »).
-- **Rechercher** — chercher une série ou un film, en local puis sur TMDB.
-- **Films** — vos films vus et votre liste « à voir ».
-- **Statistiques** — progression, activité, temps total, top séries, bilan
-  annuel.
-- **Réglages** — thème, notifications, mise à jour du catalogue, sauvegarde,
-  restauration, Jellyfin.
+| Écran | Ce qu'on y trouve |
+|---|---|
+| **À suivre** | Le prochain épisode de chaque série en cours |
+| **À venir** | Le calendrier des prochaines diffusions, en liste ou en mois |
+| **Mes séries** | Toute la bibliothèque, avec filtres et ajout de séries |
+| **Journal** | L'historique de ce que vous avez vu, et les souvenirs |
+| **Rechercher** | Chercher une série ou un film, en local puis sur TMDB |
+| **Films** | Vos films vus et votre liste « à voir » |
+| **Statistiques** | Progression, activité, temps total, top séries, bilan annuel |
+| **Réglages** | Thème, notifications, catalogue, sauvegarde, Jellyfin |
 
 ## Pile technique
 
 Volontairement réduite : aucun ORM, aucun framework CSS, aucune bibliothèque de
-state, et aucune dépendance native à compiler.
+state, et aucune dépendance native à compiler. **Cinq dépendances** au total.
 
 - **Next.js 15** (App Router) et **React 19**
 - **SQLite** via `node:sqlite`, le pilote intégré à Node — d'où **Node 24+**
@@ -129,6 +144,12 @@ docker compose up -d --build
 Le conteneur écoute sur `127.0.0.1:3000` et attend un reverse proxy devant lui.
 `./data` est monté en volume, la base survit donc aux reconstructions.
 
+> [!IMPORTANT]
+> **Cathode n'a pas d'authentification.** C'est une appli mono-utilisateur :
+> quiconque peut l'atteindre peut lire et modifier votre historique. Mettez une
+> authentification dans votre reverse proxy — basic auth ou autre — avant de
+> l'exposer sur Internet.
+
 Pour servir l'appli sous un sous-chemin, définissez `BASE_PATH` **à la fois**
 dans le bloc `build.args` et dans `environment` de `docker-compose.yml`. Il est
 baké dans les assets au moment du build : le passer au seul runtime vous laisse
@@ -177,8 +198,8 @@ Ce produit utilise l'API TMDB sans être approuvé ni certifié par
 des séries et des films proviennent de TMDB.
 
 Cathode n'est ni affilié, ni approuvé, ni lié à TV Time. Il lit l'export de
-données personnelles que TV Time fournissait à ses utilisateurs, et n'utilise aucune
-de leurs marques, de leurs logos ou de leurs API.
+données personnelles que TV Time fournissait à ses utilisateurs, et n'utilise
+aucune de leurs marques, de leurs logos ou de leurs API.
 
 ## Licence
 

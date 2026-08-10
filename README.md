@@ -1,19 +1,33 @@
+<div align="center">
+
+<img src="public/icon-192.png" alt="Cathode" width="88" />
+
 # Cathode
 
-A self-hosted TV show and movie tracker. Know what to watch next, tick off
-episodes, and keep your viewing history on your own machine.
+**A self-hosted TV show and movie tracker.**
+Know what to watch next, tick off episodes, and keep your viewing history on your own machine.
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-c8b273?style=flat-square)](LICENSE)
+![Next.js 15](https://img.shields.io/badge/Next.js-15-000000?style=flat-square&logo=nextdotjs&logoColor=white)
+![React 19](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=black)
+![SQLite](https://img.shields.io/badge/SQLite-node%3Asqlite-003b57?style=flat-square&logo=sqlite&logoColor=white)
+![5 dependencies](https://img.shields.io/badge/dependencies-5-c8b273?style=flat-square)
+![PWA](https://img.shields.io/badge/PWA-installable-5a3fc0?style=flat-square)
+
+[Version française](README.fr.md)
+
+</div>
+
+> [!NOTE]
+> The interface, the code and the comments are all in French.
+> This README is the only English part of the project.
 
 Cathode was built to replace TV Time after the service shut down. It imports a
 TV Time GDPR export if you saved one, and works perfectly well without.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-
-*(Version française : [README.fr.md](README.fr.md).)*
-
-> **Heads up:** the interface, the code and the comments are all in French.
-> This README is the only English part of the project.
-
-![Up next](docs/screenshots/01-a-suivre.png)
+<div align="center">
+  <img src="docs/screenshots/01-a-suivre.png" alt="Up next" width="820" />
+</div>
 
 ## What it does
 
@@ -26,23 +40,15 @@ button when you can't decide.
 episode list, how much is left, and the real time it would take to catch up. Set
 a pace — two episodes a night — and it tells you the date you'd finish.
 
-![Show page](docs/screenshots/03-fiche-serie.png)
-
 **Keep a library.** Filter your shows by behind, up to date, not started,
 finished, favourites, paused or dropped. Rate them, mark favourites, and see
 cast members, streaming providers and similar shows pulled from TMDB.
 
-![My shows](docs/screenshots/02-mes-series.png)
-
 **See the numbers.** Library progress, a twelve-month activity heatmap, total
 time watched, your biggest binge day, top shows, and a year-in-review page.
 
-![Statistics](docs/screenshots/04-statistiques.png)
-
 **Movies too.** Watched movies with ratings and providers, plus a watchlist with
 a one-click *j'ai vu* ("watched it").
-
-![Movies](docs/screenshots/05-films.png)
 
 **And the rest.** An upcoming-episodes calendar, a viewing journal, TMDB search
 to add shows, renewal status ("returns on…" / "cancelled"), light and dark
@@ -52,24 +58,36 @@ one-click backup and restore.
 It installs as a PWA and can send web push notifications for new episodes and a
 Sunday weekly recap.
 
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/03-fiche-serie.png" alt="Show page" /><br/><sub><b>Show page</b> — episode tracker, catch-up time, binge planner</sub></td>
+<td width="50%"><img src="docs/screenshots/02-mes-series.png" alt="My shows" /><br/><sub><b>My shows</b> — the library, filtered by status</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/04-statistiques.png" alt="Statistics" /><br/><sub><b>Statistics</b> — progress, heatmap, top shows</sub></td>
+<td width="50%"><img src="docs/screenshots/05-films.png" alt="Movies" /><br/><sub><b>Movies</b> — watched, rated, with providers</sub></td>
+</tr>
+</table>
+
 ## The screens
 
 Screen names are in French, since the interface is.
 
-- **À suivre** (up next) — the next episode of every show in progress
-- **À venir** (upcoming) — the release calendar, as a list or a month view
-- **Mes séries** (my shows) — the whole library, with filters and show adding
-- **Journal** — what you watched, and memories ("one year ago")
-- **Rechercher** (search) — search locally, then fall back to TMDB
-- **Films** (movies) — watched movies and the watchlist
-- **Statistiques** — progress, activity, total time, top shows, year in review
-- **Réglages** (settings) — theme, notifications, catalogue refresh, backup,
-  restore, Jellyfin
+| Screen | What it holds |
+|---|---|
+| **À suivre** | Up next — the next episode of every show in progress |
+| **À venir** | Upcoming — the release calendar, as a list or a month view |
+| **Mes séries** | My shows — the whole library, with filters and show adding |
+| **Journal** | What you watched, and memories ("one year ago") |
+| **Rechercher** | Search locally, then fall back to TMDB |
+| **Films** | Movies — watched, and the watchlist |
+| **Statistiques** | Progress, activity, total time, top shows, year in review |
+| **Réglages** | Settings — theme, notifications, catalogue, backup, Jellyfin |
 
 ## Stack
 
 Deliberately small — no ORM, no CSS framework, no state library, and no native
-dependency to compile.
+dependency to compile. **Five runtime dependencies** in total.
 
 - **Next.js 15** (App Router) and **React 19**
 - **SQLite** through `node:sqlite`, Node's built-in driver — hence **Node 24+**
@@ -117,6 +135,12 @@ docker compose up -d --build
 
 The container listens on `127.0.0.1:3000`, expecting a reverse proxy in front of
 it. `./data` is mounted as a volume so the database survives rebuilds.
+
+> [!IMPORTANT]
+> **Cathode has no login of its own.** It is a single-user app: anyone who can
+> reach it can read and edit your history. Put authentication in your reverse
+> proxy — basic auth, or whatever your setup offers — before exposing it to the
+> internet.
 
 To serve the app under a sub-path, set `BASE_PATH` in **both** the `build.args`
 and `environment` blocks of `docker-compose.yml`. It is baked into the assets at
