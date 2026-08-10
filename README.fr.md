@@ -7,6 +7,7 @@
 **Un suivi de séries et de films auto-hébergé.**
 Sachez quoi regarder ensuite, cochez vos épisodes, et gardez votre historique chez vous.
 
+[![CI](https://github.com/PierreTzt/cathode/actions/workflows/ci.yml/badge.svg)](https://github.com/PierreTzt/cathode/actions/workflows/ci.yml)
 [![Licence : MIT](https://img.shields.io/badge/licence-MIT-c8b273?style=flat-square)](LICENSE)
 ![Next.js 15](https://img.shields.io/badge/Next.js-15-000000?style=flat-square&logo=nextdotjs&logoColor=white)
 ![React 19](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=black)

@@ -7,6 +7,7 @@
 **A self-hosted TV show and movie tracker.**
 Know what to watch next, tick off episodes, and keep your viewing history on your own machine.
 
+[![CI](https://github.com/PierreTzt/cathode/actions/workflows/ci.yml/badge.svg)](https://github.com/PierreTzt/cathode/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-c8b273?style=flat-square)](LICENSE)
 ![Next.js 15](https://img.shields.io/badge/Next.js-15-000000?style=flat-square&logo=nextdotjs&logoColor=white)
 ![React 19](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=black)
