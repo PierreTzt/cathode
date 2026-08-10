@@ -1,5 +1,11 @@
-// Client Jellyfin minimal (lecture seule). Auth par clé API : header X-Emby-Token.
-// La config vient des réglages (base de données), pas de l'environnement.
+// Client Jellyfin minimal (lecture seule). La config vient des réglages
+// (base de données), pas de l'environnement.
+//
+// Auth par en-tête `Authorization` avec le schéma MediaBrowser. L'ancien
+// en-tête `X-Emby-Token` n'est plus utilisé : Jellyfin l'a déprécié, il est
+// désactivé par défaut depuis la 10.12 et supprimé en 10.13 — il renvoyait
+// alors un 401 sur les serveurs récents.
+// https://gist.github.com/nielsvanvelzen/ea047d9028f676185832e51ffaf12a6f
 
 export interface JellyfinConfig {
   url: string;
@@ -8,7 +14,12 @@ export interface JellyfinConfig {
 }
 
 const base = (url: string) => url.replace(/\/+$/, "");
-const entetes = (token: string) => ({ "X-Emby-Token": token, accept: "application/json" });
+const entetes = (token: string) => ({
+  Authorization:
+    `MediaBrowser Token="${token}", Client="Cathode", Device="Cathode", ` +
+    `DeviceId="cathode", Version="1"`,
+  accept: "application/json",
+});
 
 export async function testerConnexion(
   cfg: JellyfinConfig,
@@ -17,7 +28,14 @@ export async function testerConnexion(
   if (!cfg.url || !cfg.token) return { ok: false, erreur: "URL ou clé manquante" };
   try {
     const res = await fetchImpl(`${base(cfg.url)}/System/Info`, { headers: entetes(cfg.token) });
-    if (!res.ok) return { ok: false, erreur: `HTTP ${res.status}` };
+    if (!res.ok) {
+      // Un code nu n'aide personne : on nomme la cause probable.
+      if (res.status === 401)
+        return { ok: false, erreur: "HTTP 401 — clé API refusée par le serveur" };
+      if (res.status === 404)
+        return { ok: false, erreur: "HTTP 404 — URL du serveur incorrecte" };
+      return { ok: false, erreur: `HTTP ${res.status}` };
+    }
     const j = (await res.json()) as { ServerName?: string };
     return { ok: true, nom: j.ServerName };
   } catch {
