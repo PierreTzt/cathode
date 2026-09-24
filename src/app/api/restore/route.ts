@@ -1,4 +1,5 @@
 import { sauvegarder } from "@/import/backup";
+import { origineAutorisee } from "@/lib/origine";
 import { writeFileSync, rmSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
@@ -7,6 +8,9 @@ export const dynamic = "force-dynamic";
 // Restaure une sauvegarde : sauvegarde l'état actuel, valide l'entête SQLite,
 // remplace la base et purge les fichiers WAL/SHM.
 export async function POST(req: Request) {
+  if (!origineAutorisee(req)) {
+    return Response.json({ ok: false, erreur: "Origine refusée." }, { status: 403 });
+  }
   const form = await req.formData();
   const file = form.get("fichier");
   if (!(file instanceof File)) {
