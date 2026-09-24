@@ -4,10 +4,12 @@ Cathode tourne en conteneur Docker sur le VPS, derrière Caddy, exposé sous le
 chemin `/cathode`.
 
 Le sous-chemin est piloté par `BASE_PATH`, vide par défaut (appli servie à la
-racine). `docker-compose.yml` le fixe à `/cathode` à **deux** endroits :
-`build.args` et `environment`. Les deux sont nécessaires — Next.js bake le
-`basePath` dans les assets au build, donc ne le passer qu'au runtime laisse des
-404 sur toutes les ressources statiques.
+racine). Sur le VPS, le `.env` contient `BASE_PATH=/cathode` ;
+`docker-compose.yml` le lit et le transmet à **deux** endroits : `build.args` et
+`environment`. Les deux sont nécessaires — Next.js bake le `basePath` dans les
+assets au build, donc ne le passer qu'au runtime laisse des 404 sur toutes les
+ressources statiques. Sans cette ligne dans `.env`, l'appli serait servie à la
+racine et Caddy renverrait des 404 sous `/cathode`.
 
 ## Démarrer / mettre à jour l'image
 
@@ -38,16 +40,19 @@ docker exec cathode npm run catalogue
 ```
 
 Cette commande écrit aussi l'horodatage `derniere_resync` (visible dans l'app,
-onglet **Plus**).
+page **Réglages**).
 
 ### Cron hôte (recommandé)
 
-Éditer la crontab du VPS (`crontab -e`) et ajouter :
+Éditer la crontab de l'utilisateur qui gère Docker (`crontab -e`) et ajouter :
 
 ```cron
 # Cathode — resync catalogue + plateformes + suggestions, tous les 3 jours à 4 h
-0 4 */3 * * docker exec cathode npm run catalogue >> /var/log/cathode-resync.log 2>&1
+0 4 */3 * * docker exec cathode npm run catalogue >> $HOME/cathode-resync.log 2>&1
 ```
+
+Les logs vont dans le dossier personnel : un utilisateur normal ne peut pas
+écrire dans `/var/log`, et la redirection échouerait sans rien lancer.
 
 ### Récap hebdomadaire (notification du dimanche)
 
@@ -56,7 +61,7 @@ dimanche soir :
 
 ```cron
 # Cathode — récap hebdo poussé le dimanche à 20 h
-0 20 * * 0 docker exec cathode npm run recap >> /var/log/cathode-recap.log 2>&1
+0 20 * * 0 docker exec cathode npm run recap >> $HOME/cathode-recap.log 2>&1
 ```
 
 ### Alternative : service docker-compose dédié
@@ -76,7 +81,7 @@ lance la commande en boucle (à adapter) :
 ```
 
 > Note : la resync peut aussi être déclenchée à la main depuis l'app
-> (onglet **Plus** → « Mettre à jour maintenant »).
+> (page **Réglages** → « Mettre à jour maintenant »).
 
 ## Mise à jour automatique depuis Git
 

@@ -143,9 +143,10 @@ it. `./data` is mounted as a volume so the database survives rebuilds.
 > proxy — basic auth, or whatever your setup offers — before exposing it to the
 > internet.
 
-To serve the app under a sub-path, set `BASE_PATH` in **both** the `build.args`
-and `environment` blocks of `docker-compose.yml`. It is baked into the assets at
-build time, so passing it at runtime alone leaves you with 404s on every asset.
+The app is served at the domain root by default. To serve it under a sub-path,
+set `BASE_PATH` (e.g. `/cathode`) in `.env` and rebuild: it is baked into the
+assets at build time, and `docker-compose.yml` passes it to both the build and
+the container.
 
 See [`docs/DEPLOIEMENT-VPS.md`](docs/DEPLOIEMENT-VPS.md) (French) for a full VPS
 deployment with Caddy and cron jobs.

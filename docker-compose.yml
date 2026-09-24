@@ -2,10 +2,11 @@ services:
   cathode:
     build:
       context: .
-      # Le basePath est baké dans les assets au build : il doit être passé ici,
-      # pas seulement dans `environment`. Le retirer sert l'appli à la racine.
+      # BASE_PATH vient du fichier .env (vide = appli servie à la racine). Il est
+      # baké dans les assets au build : il doit être passé ici, pas seulement
+      # dans `environment`.
       args:
-        BASE_PATH: /cathode
+        BASE_PATH: "${BASE_PATH:-}"
         # Renseigné par scripts/maj-auto.sh ; vide sinon (version « inconnue »).
         CATHODE_VERSION: "${CATHODE_VERSION:-}"
     image: cathode:latest
@@ -20,7 +21,7 @@ services:
       - .env
     environment:
       - NODE_ENV=production
-      - BASE_PATH=/cathode
+      - BASE_PATH=${BASE_PATH:-}
     volumes:
       # Persiste la base (et ses fichiers WAL) hors du conteneur
       - ./data:/app/data

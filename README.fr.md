@@ -151,10 +151,10 @@ Le conteneur écoute sur `127.0.0.1:3000` et attend un reverse proxy devant lui.
 > authentification dans votre reverse proxy — basic auth ou autre — avant de
 > l'exposer sur Internet.
 
-Pour servir l'appli sous un sous-chemin, définissez `BASE_PATH` **à la fois**
-dans le bloc `build.args` et dans `environment` de `docker-compose.yml`. Il est
-baké dans les assets au moment du build : le passer au seul runtime vous laisse
-des 404 sur toutes les ressources.
+L'appli est servie à la racine du domaine par défaut. Pour la servir sous un
+sous-chemin, définissez `BASE_PATH` (par exemple `/cathode`) dans `.env` puis
+reconstruisez l'image : il est baké dans les assets au moment du build, et
+`docker-compose.yml` le transmet à la fois au build et au conteneur.
 
 Voir [`docs/DEPLOIEMENT-VPS.md`](docs/DEPLOIEMENT-VPS.md) pour un déploiement
 complet sur VPS avec Caddy et les tâches cron.
@@ -179,9 +179,11 @@ Tout est dans `data/cathode.db`, sur votre machine ou votre serveur. Rien n'est
 envoyé ailleurs, à l'exception des requêtes à TMDB pour récupérer les
 métadonnées des séries que vous suivez. Aucun compte, aucun traçage, aucun tiers.
 
-Une sauvegarde automatique est faite à chaque démarrage dans `data/backups/`,
-avec rotation des dix dernières. Vous pouvez aussi télécharger une sauvegarde et
-la restaurer depuis **Réglages → Sauvegarde**.
+Les sauvegardes vont dans `data/backups/`, avec rotation des dix dernières. Une
+sauvegarde est faite automatiquement avant chaque restauration et avant chaque
+mise à jour par `scripts/maj-auto.sh`, et à la demande avec `npm run backup`.
+Vous pouvez aussi télécharger une sauvegarde et la restaurer depuis
+**Réglages → Sauvegarde**.
 
 `data/` et `gdpr-data/` sont ignorés par git : votre historique ne peut pas
 atterrir dans un commit par accident.
